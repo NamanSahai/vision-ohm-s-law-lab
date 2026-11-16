@@ -55,9 +55,9 @@ export const PowerSupplyController: React.FC<Props> = ({
       : 0;
 
   return (
-    <div className={`fixed top-14 sm:top-16 right-2 sm:right-4 z-30 ${
+    <div className={`fixed top-16 sm:top-20 right-2 sm:right-4 z-30 ${
       isCollapsed ? 'w-auto max-w-fit' : 'w-full max-w-[calc(100vw-1rem)] sm:max-w-xs'
-    } max-h-[calc(100vh-5rem)] overflow-y-auto bg-slate-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl p-3 sm:p-4 text-slate-200 space-y-2.5 sm:space-y-3 font-sans transition-all duration-300 pointer-events-auto`}>
+    } max-h-[calc(100vh-5.5rem)] overflow-y-auto bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 rounded-2xl shadow-2xl p-3 sm:p-4 text-slate-200 space-y-2.5 sm:space-y-3 font-sans transition-all duration-300 pointer-events-auto`}>
       {/* Header */}
       <div className={`flex items-center justify-between ${isCollapsed ? '' : 'border-b border-slate-800 pb-2.5'} gap-2`}>
         <div className="flex items-center gap-1.5 sm:gap-2">

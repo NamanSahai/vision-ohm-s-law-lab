@@ -129,12 +129,12 @@ export const ObservationDrawer: React.FC<Props> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-950/85 hover:bg-slate-900 text-slate-200 border-t border-x border-white/10 rounded-t-2xl shadow-2xl backdrop-blur-2xl cursor-pointer transition font-sans gap-2"
+        className="w-full flex items-center justify-between px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-slate-900/95 hover:bg-slate-800 text-slate-200 border-t border-x border-slate-700/80 rounded-t-2xl shadow-2xl backdrop-blur-xl cursor-pointer transition font-sans gap-1.5 sm:gap-2"
       >
         <div className="flex items-center gap-1.5 sm:gap-2 truncate">
           <Table className="w-4 h-4 text-cyan-400 shrink-0" />
           <span className="text-xs font-bold uppercase tracking-wider text-white truncate">
-            <span className="hidden 2xl:inline">Observations &amp; </span>Graph
+            <span className="hidden sm:inline">Observations &amp; </span>Graph
           </span>
           <span className="px-1.5 sm:px-2 py-0.5 text-[10px] rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono shrink-0">
             {readings.length}
@@ -142,12 +142,12 @@ export const ObservationDrawer: React.FC<Props> = ({
           {isVerified && (
             <span className="px-1.5 sm:px-2 py-0.5 text-[10px] rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1 font-semibold shrink-0">
               <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-              <span className="hidden 2xl:inline">Verified</span>
+              <span className="hidden sm:inline">Verified</span>
             </span>
           )}
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 shrink-0">
-          <span className="text-[11px] font-mono text-cyan-300 hidden 2xl:inline">
+          <span className="text-[11px] font-mono text-cyan-300 hidden md:inline">
             {circuitStatus.isCircuitClosed && circuitStatus.isPowerOn
               ? `Live: ${circuitStatus.voltmeterReading.toFixed(2)}V • ${circuitStatus.ammeterReading.toFixed(1)}mA`
               : 'Supply Off'}

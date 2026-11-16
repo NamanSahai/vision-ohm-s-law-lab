@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { LaboratoryCanvas } from './components/LaboratoryCanvas';
 import { Header } from './ui/Header';
+import { DiagnosticsOverlay } from './ui/DiagnosticsOverlay';
 import { VisionProGuideModal } from './ui/VisionProGuideModal';
 import { ApparatusInspectorModal } from './ui/ApparatusInspectorModal';
 import { QuickHelpModal } from './ui/QuickHelpModal';
@@ -299,24 +300,13 @@ export function App() {
         onToggleSwitch={handleToggleSwitch}
       />
 
-      {/* Left Dock: Camera Presets & Tutorial Mode Step Guide (Grouped to prevent collision) */}
-      <div className="fixed top-14 sm:top-16 lg:top-18 left-2 sm:left-4 z-30 flex flex-col items-start gap-2 max-w-[calc(100vw-1rem)] sm:max-w-xs pointer-events-none">
-        <CameraPresetsBar
-          activePreset={activeCameraPreset}
-          onSelectPreset={handleSelectCameraPreset}
-          isPointerLocked={isPointerLocked}
-          onTogglePointerLock={() => scene?.togglePointerLock()}
-        />
-
-        {currentMode === 'tutorial' && (
-          <TutorialStepCard
-            currentStepIndex={tutorialStep}
-            onNextStep={() => setTutorialStep((prev) => Math.min(8, prev + 1))}
-            onPrevStep={() => setTutorialStep((prev) => Math.max(0, prev - 1))}
-            onSelectStep={setTutorialStep}
-          />
-        )}
-      </div>
+      {/* Camera Presets Sidebar (Left) */}
+      <CameraPresetsBar
+        activePreset={activeCameraPreset}
+        onSelectPreset={handleSelectCameraPreset}
+        isPointerLocked={isPointerLocked}
+        onTogglePointerLock={() => scene?.togglePointerLock()}
+      />
 
       {/* First-Person Free Look Center Crosshair & Interactive Reticle */}
       {isPointerLocked && (
@@ -359,6 +349,16 @@ export function App() {
         </div>
       )}
 
+      {/* Tutorial Mode Step Guide (Left of center) */}
+      {currentMode === 'tutorial' && (
+        <TutorialStepCard
+          currentStepIndex={tutorialStep}
+          onNextStep={() => setTutorialStep((prev) => Math.min(8, prev + 1))}
+          onPrevStep={() => setTutorialStep((prev) => Math.max(0, prev - 1))}
+          onSelectStep={setTutorialStep}
+        />
+      )}
+
       {/* Power Supply & Knife Switch Controller HUD (Right) */}
       <PowerSupplyController
         circuitStatus={circuitStatus}
@@ -386,6 +386,12 @@ export function App() {
         onAddReading={handleAddReading}
         onDeleteReading={handleDeleteReading}
         onClearReadings={handleClearReadings}
+      />
+
+      {/* Spatial Diagnostics Overlay (Bottom Left) */}
+      <DiagnosticsOverlay
+        diagnostics={diagnostics}
+        onOpenGuide={() => setGuideOpen(true)}
       />
 
       {/* Apple Vision Pro Safari Setup Modal */}

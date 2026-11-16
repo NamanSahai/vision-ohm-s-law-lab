@@ -12,7 +12,6 @@ import {
   HelpCircle,
   Volume2,
   VolumeX,
-  Activity,
 } from 'lucide-react';
 
 interface Props {
@@ -45,7 +44,7 @@ export const Header: React.FC<Props> = ({
   return (
     <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-2 sm:px-4 lg:px-6 py-2 sm:py-3 pointer-events-none gap-1.5 sm:gap-2">
       {/* Left branding */}
-      <div className="pointer-events-auto bg-slate-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl px-3 sm:px-4 py-1.5 sm:py-2 shadow-xl shrink-0">
+      <div className="pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-slate-700/70 rounded-2xl px-2.5 sm:px-4 py-1.5 sm:py-2 shadow-xl shrink-0">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
           <span className="text-[9px] sm:text-[11px] font-bold tracking-wider sm:tracking-widest text-cyan-400 uppercase truncate">
@@ -59,7 +58,7 @@ export const Header: React.FC<Props> = ({
       </div>
 
       {/* Center Mode Switcher for Desktop / Mobile */}
-      <div className="pointer-events-auto flex items-center gap-1 bg-slate-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-1 shadow-xl shrink-0">
+      <div className="pointer-events-auto flex items-center gap-1 bg-slate-900/90 backdrop-blur-md border border-slate-700/70 rounded-2xl p-1 shadow-xl shrink-0">
         <button
           type="button"
           onClick={() => onSelectMode('tutorial')}
@@ -93,17 +92,6 @@ export const Header: React.FC<Props> = ({
 
       {/* Right controls */}
       <div className="pointer-events-auto flex items-center gap-1 sm:gap-2 shrink-0">
-        {/* FPS & Spatial Diagnostics Badge */}
-        <button
-          type="button"
-          onClick={onOpenGuide}
-          className="hidden sm:flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-900/80 border border-slate-700/60 text-[11px] font-mono text-cyan-400 backdrop-blur-md shadow hover:bg-slate-800 transition cursor-pointer shrink-0"
-          title="Spatial Diagnostics: 3D Performance & WebXR Status (Click to view Guide)"
-        >
-          <Activity className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-          <span>{diagnostics.fps} FPS</span>
-        </button>
-
         {/* Audio Toggle button */}
         <button
           type="button"

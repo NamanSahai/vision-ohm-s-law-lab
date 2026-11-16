@@ -21,8 +21,8 @@ export const DiagnosticsOverlay: React.FC<Props> = ({ diagnostics, onOpenGuide }
       >
         <div className="flex items-center space-x-1.5 sm:space-x-2">
           <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 animate-pulse shrink-0" />
-          <span className="hidden 2xl:inline font-semibold text-slate-200 tracking-wider">SPATIAL DIAGNOSTICS</span>
-          <span className="2xl:hidden font-semibold text-slate-200 tracking-wider text-[11px]">DIAG</span>
+          <span className="hidden sm:inline font-semibold text-slate-200 tracking-wider">SPATIAL DIAGNOSTICS</span>
+          <span className="sm:hidden font-semibold text-slate-200 tracking-wider text-[11px]">DIAG</span>
           <span className="px-1.5 py-0.5 text-[9px] sm:text-[10px] rounded bg-cyan-950 text-cyan-300 border border-cyan-800 shrink-0">
             {diagnostics.fps} FPS
           </span>

@@ -5,6 +5,9 @@ import {
   AlertTriangle,
   Power,
   ToggleLeft,
+  ToggleRight,
+  Activity,
+  ArrowRight,
   ShieldCheck,
 } from 'lucide-react';
 
@@ -28,9 +31,9 @@ export const CircuitStatusBanner: React.FC<Props> = ({
   const powerMilliwatts = voltage * current;
 
   // Status diagnostics badge
-  let statusBadgeColor = 'bg-slate-800/80 text-slate-400 border-slate-700/60';
-  let statusText = 'DC SUPPLY OFF';
-  let statusIcon = <Power className="w-3.5 h-3.5 text-slate-400" />;
+  let statusBadgeColor = 'bg-slate-800 text-slate-300 border-slate-700';
+  let statusText = 'CIRCUIT IDLE';
+  let statusIcon = <Power className="w-3.5 h-3.5" />;
 
   if (!isPowerOn) {
     statusBadgeColor = 'bg-slate-800/80 text-slate-400 border-slate-700/60';
@@ -50,58 +53,103 @@ export const CircuitStatusBanner: React.FC<Props> = ({
     statusIcon = <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />;
   } else {
     statusBadgeColor = 'bg-emerald-950/80 text-emerald-300 border-emerald-700/80';
-    statusText = 'CIRCUIT ENERGIZED • ACTIVE';
+    statusText = 'OHM\'S LAW VERIFIED • ACTIVE';
     statusIcon = <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />;
   }
 
   return (
-    <div className="fixed top-14 sm:top-15 left-1/2 -translate-x-1/2 z-20 pointer-events-auto transition-all duration-300">
-      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-xl border border-white/10 shadow-xl shadow-black/40 text-xs">
+    <div className="fixed top-14 sm:top-16 lg:top-18 left-1/2 -translate-x-1/2 z-20 pointer-events-auto transition-all duration-300 w-auto max-w-[calc(100vw-1rem)]">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 shadow-2xl shadow-black/50 text-xs overflow-hidden">
         {/* Status Pill */}
         <div
-          className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold tracking-wider uppercase border text-[10px] shrink-0 ${statusBadgeColor}`}
+          className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl font-bold tracking-wider uppercase border text-[9px] sm:text-[10px] shrink-0 ${statusBadgeColor}`}
         >
           {statusIcon}
           <span>{statusText}</span>
         </div>
 
-        {/* Quick Readout */}
-        <div className="hidden sm:flex items-center gap-1.5 text-slate-300 font-mono text-[11px] shrink-0">
+        {/* Circuit Loop Breadcrumb Pipeline (Full on XL, Compact on MD, Hidden on Mobile) */}
+        <div className="hidden xl:flex items-center gap-1.5 text-slate-400 font-mono text-[11px] shrink-0">
+          {/* Node 1: DC Power Supply */}
           <button
-            type="button"
             onClick={onTogglePower}
-            className={`px-1.5 py-0.5 rounded hover:bg-slate-800 transition cursor-pointer ${
-              isPowerOn ? 'text-red-300 font-semibold' : 'text-slate-400'
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border transition cursor-pointer ${
+              isPowerOn
+                ? 'bg-red-950/40 border-red-700/50 text-red-300 font-semibold'
+                : 'bg-slate-800/40 border-slate-700/40 text-slate-400 hover:text-slate-200'
             }`}
-            title="Toggle DC Power"
+            title="Click to toggle Power"
           >
-            PS: {isPowerOn ? `${circuitStatus.appliedVoltage.toFixed(1)}V` : 'OFF'}
+            <span className={`w-1.5 h-1.5 rounded-full ${isPowerOn ? 'bg-red-400 animate-ping' : 'bg-slate-600'}`} />
+            <span>PS ({isPowerOn ? `${circuitStatus.appliedVoltage.toFixed(1)}V` : 'OFF'})</span>
           </button>
-          <span className="text-slate-600">•</span>
+
+          <ArrowRight className={`w-3 h-3 ${isCurrentFlowing ? 'text-amber-400 animate-pulse' : 'text-slate-600'}`} />
+
+          {/* Node 2: SPST Switch */}
           <button
-            type="button"
             onClick={onToggleSwitch}
-            className={`px-1.5 py-0.5 rounded hover:bg-slate-800 transition cursor-pointer ${
-              isSwitchClosed ? 'text-amber-300 font-semibold' : 'text-slate-400'
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border transition cursor-pointer ${
+              isSwitchClosed
+                ? 'bg-amber-950/40 border-amber-700/50 text-amber-300 font-semibold'
+                : 'bg-slate-800/40 border-slate-700/40 text-slate-400 hover:text-slate-200'
             }`}
-            title="Toggle Knife Switch"
+            title="Click to toggle Switch"
           >
-            SW: {isSwitchClosed ? 'CLOSED' : 'OPEN'}
+            {isSwitchClosed ? <ToggleRight className="w-3 h-3 text-amber-400" /> : <ToggleLeft className="w-3 h-3 text-slate-500" />}
+            <span>Switch ({isSwitchClosed ? 'CLOSED' : 'OPEN'})</span>
           </button>
-          <span className="text-slate-600">•</span>
-          <span className={isCurrentFlowing ? 'text-emerald-400 font-semibold' : 'text-slate-400'}>
-            I: {current.toFixed(1)} mA
+
+          <ArrowRight className={`w-3 h-3 ${isCurrentFlowing ? 'text-emerald-400 animate-pulse' : 'text-slate-600'}`} />
+
+          {/* Node 3: Ammeter */}
+          <div
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border ${
+              isCurrentFlowing
+                ? 'bg-emerald-950/40 border-emerald-700/50 text-emerald-300 font-semibold'
+                : 'bg-slate-800/40 border-slate-700/40 text-slate-400'
+            }`}
+          >
+            <Activity className="w-3 h-3" />
+            <span>Ammeter ({current.toFixed(1)} mA)</span>
+          </div>
+
+          <ArrowRight className={`w-3 h-3 ${isCurrentFlowing ? 'text-cyan-400 animate-pulse' : 'text-slate-600'}`} />
+
+          {/* Node 4: Resistor */}
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border bg-cyan-950/40 border-cyan-700/50 text-cyan-300 font-semibold">
+            <span>Resistor (100Ω)</span>
+            <span className="text-[10px] text-cyan-400/80">[{voltage.toFixed(2)}V]</span>
+          </div>
+
+          <ArrowRight className={`w-3 h-3 ${isCurrentFlowing ? 'text-indigo-400 animate-pulse' : 'text-slate-600'}`} />
+
+          {/* Node 5: Return to Ground */}
+          <div className="px-1.5 py-0.5 rounded bg-slate-800/50 text-slate-400 text-[10px]">
+            GND (-)
+          </div>
+        </div>
+
+        {/* Compact Summary for Medium Screens */}
+        <div className="hidden sm:flex xl:hidden items-center gap-1.5 text-slate-400 font-mono text-[10px]">
+          <span className={isPowerOn ? 'text-red-300' : 'text-slate-500'}>
+            PS: {isPowerOn ? `${circuitStatus.appliedVoltage.toFixed(1)}V` : 'OFF'}
           </span>
-          <span className="text-slate-600">•</span>
-          <span className={isCurrentFlowing ? 'text-cyan-400 font-semibold' : 'text-slate-400'}>
-            V: {voltage.toFixed(2)} V
+          <span>•</span>
+          <span className={isSwitchClosed ? 'text-amber-300' : 'text-slate-500'}>
+            SW: {isSwitchClosed ? 'CLOSED' : 'OPEN'}
+          </span>
+          <span>•</span>
+          <span className={isCurrentFlowing ? 'text-emerald-300' : 'text-slate-500'}>
+            I: {current.toFixed(1)}mA
           </span>
         </div>
 
-        {/* Live Power Indicator */}
+        {/* Live Power Readout (P = V * I) */}
         {isCurrentFlowing && (
-          <div className="hidden lg:flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-950/70 border border-indigo-700/60 text-indigo-300 font-mono text-[10px] font-semibold shrink-0">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-950/60 border border-indigo-700/50 text-indigo-300 font-mono text-[10px] sm:text-[11px] font-semibold shrink-0">
             <Zap className="w-3 h-3 text-indigo-400" />
+            <span className="hidden sm:inline">P = </span>
             <span>{powerMilliwatts.toFixed(1)} mW</span>
           </div>
         )}

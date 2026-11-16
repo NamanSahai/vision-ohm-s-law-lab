@@ -79,57 +79,51 @@ export const TutorialStepCard: React.FC<Props> = ({
   onPrevStep,
 }) => {
   const [showHint, setShowHint] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
   const step = TUTORIAL_STEPS[currentStepIndex];
   const progressPercent = ((currentStepIndex + 1) / TUTORIAL_STEPS.length) * 100;
 
   if (isCollapsed) {
     return (
-      <div className="pointer-events-auto max-w-full transition-all duration-300">
+      <div className="fixed top-24 sm:top-28 left-14 sm:left-16 md:left-48 z-25 max-w-[calc(100vw-4.5rem)] sm:max-w-xs transition-all duration-300">
         <button
           type="button"
           onClick={() => setIsCollapsed(false)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-cyan-500/50 text-white shadow-xl backdrop-blur-xl text-xs font-semibold hover:bg-slate-900 hover:border-cyan-400 transition cursor-pointer group"
-          title="Expand Tutorial Guide"
+          className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/95 border border-cyan-500/60 text-white shadow-xl backdrop-blur-md text-xs font-semibold hover:bg-slate-800 transition"
+          title="Expand Tutorial Step"
         >
-          <div className="w-5 h-5 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
-            <GraduationCap className="w-3.5 h-3.5" />
-          </div>
-          <span className="truncate max-w-[180px] text-cyan-300 font-mono text-[11px]">
-            Step {step.id}: {step.title.split('. ')[1] || step.title}
-          </span>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
+          <GraduationCap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          <span className="truncate">Step {step.id}: {step.title.split('. ')[1] || step.title}</span>
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </button>
       </div>
     );
   }
 
   return (
-    <div className="pointer-events-auto max-w-full w-full max-h-[calc(100vh-22rem)] flex flex-col bg-slate-950/85 backdrop-blur-2xl border border-cyan-500/30 rounded-2xl shadow-2xl p-3 sm:p-3.5 text-slate-200 space-y-2 sm:space-y-2.5 font-sans transition-all duration-300 overflow-hidden">
+    <div className="fixed top-24 sm:top-28 left-14 sm:left-16 md:left-48 z-25 max-w-[calc(100vw-4.5rem)] sm:max-w-sm w-full bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-3 sm:p-4 text-slate-200 space-y-2.5 sm:space-y-3 font-sans transition-all duration-300">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2 shrink-0">
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
         <div className="flex items-center gap-1.5 truncate">
-          <div className="w-5 h-5 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400">
-            <GraduationCap className="w-3.5 h-3.5" />
-          </div>
-          <span className="text-[11px] font-bold text-cyan-300 uppercase tracking-wider truncate">
+          <GraduationCap className="w-4 h-4 text-cyan-400 shrink-0" />
+          <span className="text-xs font-bold text-white uppercase tracking-wider truncate">
             Tutorial • Step {step.id} of {TUTORIAL_STEPS.length}
           </span>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={() => setShowHint(!showHint)}
-            className="text-amber-400 hover:text-amber-300 text-[11px] flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800 transition cursor-pointer"
+            className="text-amber-400 hover:text-amber-300 text-xs flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800"
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>{showHint ? 'Hide Hint' : 'Hint'}</span>
+            <span className="hidden sm:inline">{showHint ? 'Hide Hint' : 'Hint'}</span>
           </button>
           <button
             type="button"
             onClick={() => setIsCollapsed(true)}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-            title="Minimize to floating pill"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            title="Minimize Tutorial Card"
           >
             <ChevronUp className="w-4 h-4" />
           </button>
@@ -137,33 +131,33 @@ export const TutorialStepCard: React.FC<Props> = ({
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-slate-800/80 rounded-full h-1 overflow-hidden shrink-0">
+      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
         <div
-          className="bg-gradient-to-r from-cyan-400 to-blue-500 h-1 rounded-full transition-all duration-300"
+          className="bg-gradient-to-r from-cyan-500 to-indigo-500 h-1.5 rounded-full transition-all duration-300"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
 
       {/* Step Title & Instruction */}
-      <div className="space-y-1 flex-1 min-h-0 max-h-24 sm:max-h-32 overflow-y-auto pr-1">
-        <h3 className="font-bold text-white text-xs">{step.title}</h3>
-        <p className="text-[11px] text-slate-300 leading-relaxed">{step.instruction}</p>
+      <div className="space-y-1 sm:space-y-1.5 max-h-36 sm:max-h-48 overflow-y-auto pr-1">
+        <h3 className="font-bold text-cyan-300 text-xs sm:text-sm">{step.title}</h3>
+        <p className="text-xs text-slate-300 leading-relaxed">{step.instruction}</p>
       </div>
 
       {/* Expandable Hint Box */}
       {showHint && (
-        <div className="p-2 rounded-xl bg-amber-950/50 border border-amber-800/60 text-amber-200 text-[11px] leading-relaxed animate-in fade-in duration-150 shrink-0 max-h-16 overflow-y-auto">
+        <div className="p-2 sm:p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-200 text-xs leading-relaxed animate-in fade-in duration-150">
           <strong>Tip:</strong> {step.hint}
         </div>
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between pt-1 shrink-0 border-t border-slate-800/60">
+      <div className="flex items-center justify-between pt-1">
         <button
           type="button"
           onClick={onPrevStep}
           disabled={currentStepIndex === 0}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-800/80 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-[11px] font-semibold text-slate-300 transition cursor-pointer"
+          className="flex items-center gap-1 px-3 py-1 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-semibold text-slate-300 transition"
         >
           <ChevronLeft className="w-3.5 h-3.5" /> Prev
         </button>
@@ -172,7 +166,7 @@ export const TutorialStepCard: React.FC<Props> = ({
           type="button"
           onClick={onNextStep}
           disabled={currentStepIndex === TUTORIAL_STEPS.length - 1}
-          className="flex items-center gap-1 px-3 py-1 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed text-[11px] font-bold text-white transition shadow cursor-pointer"
+          className="flex items-center gap-1 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold text-white transition shadow"
         >
           {currentStepIndex === TUTORIAL_STEPS.length - 1 ? (
             <>
