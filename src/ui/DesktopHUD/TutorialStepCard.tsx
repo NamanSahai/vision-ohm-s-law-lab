@@ -101,9 +101,9 @@ export const TutorialStepCard: React.FC<Props> = ({
   }
 
   return (
-    <div className="pointer-events-auto max-w-full w-full bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-3 sm:p-4 text-slate-200 space-y-2.5 sm:space-y-3 font-sans transition-all duration-300">
+    <div className="pointer-events-auto max-w-full w-full max-h-[calc(100vh-22rem)] flex flex-col bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-2.5 sm:p-3.5 text-slate-200 space-y-2 sm:space-y-2.5 font-sans transition-all duration-300 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2 shrink-0">
         <div className="flex items-center gap-1.5 truncate">
           <GraduationCap className="w-4 h-4 text-cyan-400 shrink-0" />
           <span className="text-xs font-bold text-white uppercase tracking-wider truncate">
@@ -114,7 +114,7 @@ export const TutorialStepCard: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => setShowHint(!showHint)}
-            className="text-amber-400 hover:text-amber-300 text-xs flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800"
+            className="text-amber-400 hover:text-amber-300 text-xs flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800 cursor-pointer"
           >
             <HelpCircle className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{showHint ? 'Hide Hint' : 'Hint'}</span>
@@ -122,7 +122,7 @@ export const TutorialStepCard: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => setIsCollapsed(true)}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
             title="Minimize Tutorial Card"
           >
             <ChevronUp className="w-4 h-4" />
@@ -131,7 +131,7 @@ export const TutorialStepCard: React.FC<Props> = ({
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden shrink-0">
         <div
           className="bg-gradient-to-r from-cyan-500 to-indigo-500 h-1.5 rounded-full transition-all duration-300"
           style={{ width: `${progressPercent}%` }}
@@ -139,20 +139,20 @@ export const TutorialStepCard: React.FC<Props> = ({
       </div>
 
       {/* Step Title & Instruction */}
-      <div className="space-y-1 sm:space-y-1.5 max-h-36 sm:max-h-48 overflow-y-auto pr-1">
+      <div className="space-y-1 sm:space-y-1.5 flex-1 min-h-0 max-h-24 sm:max-h-36 overflow-y-auto pr-1">
         <h3 className="font-bold text-cyan-300 text-xs sm:text-sm">{step.title}</h3>
         <p className="text-xs text-slate-300 leading-relaxed">{step.instruction}</p>
       </div>
 
       {/* Expandable Hint Box */}
       {showHint && (
-        <div className="p-2 sm:p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-200 text-xs leading-relaxed animate-in fade-in duration-150">
+        <div className="p-2 sm:p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-200 text-xs leading-relaxed animate-in fade-in duration-150 shrink-0 max-h-20 overflow-y-auto">
           <strong>Tip:</strong> {step.hint}
         </div>
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between pt-1">
+      <div className="flex items-center justify-between pt-1 shrink-0">
         <button
           type="button"
           onClick={onPrevStep}
