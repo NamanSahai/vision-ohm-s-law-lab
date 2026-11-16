@@ -158,51 +158,130 @@ class LabSoundSynthesizer {
   }
 
   /**
-   * Banana plug jack engagement pop
+   * Crisp, modern Apple spatial glassmorphic selection tap (1st terminal clicked)
+   */
+  public playTerminalSelect() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+
+    // 1. Ultra-clean high-frequency glass transient tap
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1760, t); // A6 pure glass tone
+    osc.frequency.exponentialRampToValueAtTime(880, t + 0.018);
+
+    gain.gain.setValueAtTime(0.35, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.022);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.025);
+
+    // 2. Micro wooden body click
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(440, t);
+    osc2.frequency.exponentialRampToValueAtTime(220, t + 0.015);
+
+    gain2.gain.setValueAtTime(0.2, t);
+    gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.018);
+
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(t);
+    osc2.stop(t + 0.02);
+  }
+
+  /**
+   * Dual-stage tactile banana plug mechanical snap (2nd terminal clicked - wire connected)
    */
   public playWirePlug() {
     const ctx = this.getContext();
     if (!ctx) return;
 
     const t = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(420, t);
-    osc.frequency.exponentialRampToValueAtTime(840, t + 0.05);
+    // Stage 1: Metallic contact scratch/click (brass plug entering socket)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
 
-    gain.gain.setValueAtTime(0.3, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(2400, t);
+    osc1.frequency.exponentialRampToValueAtTime(1200, t + 0.012);
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(t);
-    osc.stop(t + 0.07);
+    gain1.gain.setValueAtTime(0.3, t);
+    gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(t);
+    osc1.stop(t + 0.02);
+
+    // Stage 2: Heavy beryllium-copper spring snap & solid seat (offset by 12ms)
+    const tSnap = t + 0.010;
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(620, tSnap);
+    osc2.frequency.exponentialRampToValueAtTime(180, tSnap + 0.045);
+
+    gain2.gain.setValueAtTime(0.45, tSnap);
+    gain2.gain.exponentialRampToValueAtTime(0.001, tSnap + 0.05);
+
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(tSnap);
+    osc2.stop(tSnap + 0.06);
   }
 
   /**
-   * Wire removal / disconnect sound
+   * Tactile wire unplug / spring release pop
    */
   public playWireUnplug() {
     const ctx = this.getContext();
     if (!ctx) return;
 
     const t = ctx.currentTime;
+
+    // 1. Spring tension release pop
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(680, t);
-    osc.frequency.exponentialRampToValueAtTime(320, t + 0.04);
+    osc.frequency.setValueAtTime(540, t);
+    osc.frequency.exponentialRampToValueAtTime(160, t + 0.035);
 
-    gain.gain.setValueAtTime(0.22, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    gain.gain.setValueAtTime(0.35, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(t);
-    osc.stop(t + 0.06);
+    osc.stop(t + 0.05);
+
+    // 2. High-frequency disengage click
+    const oscClick = ctx.createOscillator();
+    const gainClick = ctx.createGain();
+
+    oscClick.type = 'triangle';
+    oscClick.frequency.setValueAtTime(1800, t);
+    oscClick.frequency.exponentialRampToValueAtTime(800, t + 0.015);
+
+    gainClick.gain.setValueAtTime(0.2, t);
+    gainClick.gain.exponentialRampToValueAtTime(0.001, t + 0.018);
+
+    oscClick.connect(gainClick);
+    gainClick.connect(ctx.destination);
+    oscClick.start(t);
+    oscClick.stop(t + 0.02);
   }
 
   /**

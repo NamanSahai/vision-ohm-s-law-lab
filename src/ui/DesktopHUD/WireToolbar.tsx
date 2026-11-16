@@ -63,10 +63,10 @@ export const WireToolbar: React.FC<Props> = ({
   const [wireListOpen, setWireListOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-2 sm:bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-30 w-auto max-w-[calc(100vw-1rem)] sm:max-w-2xl lg:max-w-3xl px-1 sm:px-2 flex flex-col items-center gap-1.5 pointer-events-auto transition-all duration-200">
+    <div className="fixed bottom-3 sm:bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-30 w-auto max-w-[calc(100vw-1rem)] px-1 sm:px-2 flex flex-col items-center gap-1.5 pointer-events-auto transition-all duration-200">
       {/* Individual Wire Inspector Popover */}
       {wireListOpen && wires.length > 0 && (
-        <div className="w-full bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-2.5 sm:p-3 shadow-2xl text-slate-200 text-xs animate-in fade-in slide-in-from-bottom-2 duration-150">
+        <div className="w-full max-w-lg bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-2.5 sm:p-3 shadow-2xl text-slate-200 text-xs animate-in fade-in slide-in-from-bottom-2 duration-150">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
             <div className="flex items-center gap-1.5 font-semibold text-slate-300">
               <Cable className="w-4 h-4 text-cyan-400" />
@@ -78,7 +78,7 @@ export const WireToolbar: React.FC<Props> = ({
             <button
               type="button"
               onClick={onClearWires}
-              className="flex items-center gap-1 px-2 py-0.5 rounded bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 text-[10px] font-medium transition cursor-pointer"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 text-[10px] font-medium transition cursor-pointer"
             >
               <Trash2 className="w-3 h-3" />
               Remove All
@@ -123,8 +123,8 @@ export const WireToolbar: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Main Bottom Toolbar Bar */}
-      <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 sm:p-2 text-slate-200 flex items-center justify-between gap-1 sm:gap-2 text-xs font-sans w-full box-border overflow-hidden">
+      {/* Main Bottom Toolbar Bar - Modern Glassmorphic Pill */}
+      <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-full shadow-2xl pl-2.5 pr-2 sm:pl-3.5 sm:pr-2.5 py-1 sm:py-1.5 text-slate-200 flex items-center justify-between gap-1.5 sm:gap-2.5 text-xs font-sans w-auto max-w-full box-border">
         {/* Wire Color Selector */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           <Cable className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" />
@@ -137,22 +137,22 @@ export const WireToolbar: React.FC<Props> = ({
                 onClick={() => onSelectColor(c.id)}
                 className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full ${c.bgClass} flex items-center justify-center transition border-2 cursor-pointer shrink-0 ${
                   activeColor === c.id
-                    ? 'border-white scale-110 shadow-lg'
-                    : 'border-transparent opacity-70 hover:opacity-100 hover:scale-105'
+                    ? 'border-white scale-110 shadow-lg ring-1 ring-cyan-400'
+                    : 'border-transparent opacity-75 hover:opacity-100 hover:scale-105'
                 }`}
                 title={c.name}
               >
-                {activeColor === c.id && <Check className="w-3 h-3 text-white" />}
+                {activeColor === c.id && <Check className="w-3 h-3 text-white stroke-[3]" />}
               </button>
             ))}
           </div>
         </div>
 
         {/* Wiring Status Tip & Wire Count Dropdown Trigger */}
-        <div className="min-w-0 flex-1 flex items-center justify-center px-1 sm:px-1.5">
+        <div className="min-w-0 flex items-center justify-center px-0.5 sm:px-1">
           {selectedTerminal ? (
-            <div className="min-w-0 max-w-full flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-950/80 border border-amber-600/70 text-amber-300 font-mono text-[10px] sm:text-[11px] font-bold animate-pulse truncate shadow-sm">
-              <span className="hidden md:inline">Wiring: </span>
+            <div className="min-w-0 max-w-[150px] xs:max-w-[190px] sm:max-w-xs md:max-w-none flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-amber-950/80 border border-amber-600/70 text-amber-300 font-mono text-[10px] sm:text-[11px] font-bold animate-pulse truncate shadow-sm">
+              <span className="hidden lg:inline">Wiring: </span>
               <span className="text-white truncate hidden sm:inline">
                 [{TERMINAL_NAMES[selectedTerminal] || selectedTerminal}]
               </span>
@@ -165,14 +165,17 @@ export const WireToolbar: React.FC<Props> = ({
             </div>
           ) : (
             <div className="min-w-0 flex items-center gap-1.5 justify-center">
-              <span className="hidden lg:inline text-[11px] font-mono text-slate-400 truncate">
+              <span className="hidden xl:inline text-[11px] font-mono text-slate-400 truncate">
                 Click 3D terminals to connect • Click wire to remove
+              </span>
+              <span className="hidden md:inline xl:hidden text-[11px] font-mono text-slate-400 truncate">
+                Click terminals to wire
               </span>
               {wires.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setWireListOpen(!wireListOpen)}
-                  className={`flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-lg border text-[10px] sm:text-[11px] font-medium transition cursor-pointer shrink-0 ${
+                  className={`flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full border text-[10px] sm:text-[11px] font-medium transition cursor-pointer shrink-0 ${
                     wireListOpen
                       ? 'bg-cyan-950 border-cyan-500 text-cyan-300'
                       : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
@@ -196,12 +199,12 @@ export const WireToolbar: React.FC<Props> = ({
           <button
             type="button"
             onClick={onAutoWireCorrectCircuit}
-            className="shrink-0 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white font-semibold text-[11px] sm:text-xs shadow-md shadow-cyan-950/50 transition cursor-pointer"
+            className="shrink-0 flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white font-semibold text-[11px] sm:text-xs shadow-md shadow-cyan-950/50 transition cursor-pointer"
             title="Automatically connect standard series ammeter and parallel voltmeter circuit"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-            <span className="hidden sm:inline">Auto-Wire</span>
-            <span className="hidden lg:inline"> Circuit</span>
+            <span className="hidden md:inline">Auto-Wire Circuit</span>
+            <span className="hidden sm:inline md:hidden">Auto-Wire</span>
             <span className="sm:hidden">Auto</span>
           </button>
 
@@ -209,7 +212,7 @@ export const WireToolbar: React.FC<Props> = ({
             <button
               type="button"
               onClick={onClearWires}
-              className="shrink-0 p-1 sm:p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition cursor-pointer"
+              className="shrink-0 p-1 sm:p-1.5 rounded-full text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition cursor-pointer"
               title="Remove all wires"
             >
               <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

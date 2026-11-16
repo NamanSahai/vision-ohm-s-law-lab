@@ -35,10 +35,8 @@ export const LaboratoryCanvas: React.FC<Props> = ({ onDiagnosticsUpdate, onManag
       // 1. Process spatial WebXR inputs (hands, transient pointers)
       webxrManager.update(frame || null);
 
-      // 2. Process desktop controls if not in active XR session
-      if (!webxrManager.xrSession) {
-        scene.update();
-      }
+      // 2. Process scene dynamics, wire drag tracking, and interactions
+      scene.update(!!webxrManager.xrSession);
 
       // 3. Render frame
       scene.render();

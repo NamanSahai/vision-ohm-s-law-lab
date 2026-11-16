@@ -106,11 +106,11 @@ export class HandJointVisualizer {
       emissiveIntensity: 0.8,
     });
 
-    const jointGeo = new THREE.SphereGeometry(0.007, 16, 16);
-    const tipGeo = new THREE.SphereGeometry(0.009, 16, 16);
+    const jointGeo = new THREE.BufferGeometry(); // Knuckles don't render intrusive bubble meshes
+    const tipGeo = new THREE.SphereGeometry(0.004, 12, 12); // Minimal 4mm tactile fingertip indicator
 
     for (const jointName of XR_HAND_JOINTS) {
-      const isTip = jointName.endsWith('-tip');
+      const isTip = jointName === 'index-finger-tip' || jointName === 'thumb-tip';
       const mesh = new THREE.Mesh(isTip ? tipGeo : jointGeo, isTip ? this.tipMaterial : this.jointMaterial);
       mesh.name = `${handedness}_${jointName}`;
       mesh.visible = false;
@@ -118,21 +118,21 @@ export class HandJointVisualizer {
       this.group.add(mesh);
     }
 
-    // Bone lines
+    // Slender, subtle bone lines with low opacity
     this.bonePositions = new Float32Array(BONE_CONNECTIONS.length * 6);
     const boneGeometry = new THREE.BufferGeometry();
     boneGeometry.setAttribute('position', new THREE.BufferAttribute(this.bonePositions, 3));
     const boneMaterial = new THREE.LineBasicMaterial({
       color: baseColor,
       transparent: true,
-      opacity: 0.6,
-      linewidth: 2,
+      opacity: 0.25,
+      linewidth: 1,
     });
     this.boneLines = new THREE.LineSegments(boneGeometry, boneMaterial);
     this.group.add(this.boneLines);
 
-    // Pinch line / sphere between thumb and index tip
-    const pinchGeo = new THREE.SphereGeometry(0.012, 16, 16);
+    // Subtle pinch contact glow between thumb and index tip
+    const pinchGeo = new THREE.SphereGeometry(0.006, 12, 12);
     this.pinchIndicator = new THREE.Mesh(pinchGeo, this.pinchMaterial);
     this.pinchIndicator.visible = false;
     this.group.add(this.pinchIndicator);
@@ -196,7 +196,7 @@ export class HandJointVisualizer {
           jointMesh.scale.set(s, s, s);
         }
 
-        jointMesh.visible = true;
+        jointMesh.visible = (jointName === 'index-finger-tip' || jointName === 'thumb-tip');
         validCount++;
         jointPositions.set(jointName, jointMesh.position.clone());
       } else {

@@ -21,6 +21,7 @@ export class InputAbstraction {
   private raycaster: THREE.Raycaster = new THREE.Raycaster();
   private hoveredObjects: Map<string, InteractableObject3D> = new Map();
   private spatialHandler: SpatialInteractionHandler | null = null;
+  public onDragUpdate?: () => void;
 
   public setSpatialHandler(handler: SpatialInteractionHandler | null) {
     this.spatialHandler = handler;
@@ -281,9 +282,14 @@ export class InputAbstraction {
     newPos.y = 0.885; // Keep safely resting on teak table surface
 
     drag.object.position.copy(newPos);
+    drag.object.updateMatrixWorld(true);
 
     if (drag.object.onGrabMove) {
       drag.object.onGrabMove(currentPoint);
+    }
+
+    if (this.onDragUpdate) {
+      this.onDragUpdate();
     }
   }
 

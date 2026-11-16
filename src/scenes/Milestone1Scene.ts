@@ -210,6 +210,11 @@ export class Milestone1Scene {
     );
     this.scene.add(this.wireManager.group);
 
+    // Dynamic real-time wire following during any apparatus move/drag
+    this.inputAbstraction.onDragUpdate = () => {
+      this.wireManager.updateAllWires();
+    };
+
     this.tableMesh = this.buildEnvironment();
 
     // 7. Create Interactive Test Objects
@@ -2003,20 +2008,18 @@ export class Milestone1Scene {
     if (termHits.length > 0) {
       const termId = (termHits[0].object as any).terminalId as TerminalId;
       if (termId) {
-        labAudio.playWirePlug();
         this.wireManager.handleTerminalClick(termId);
         return;
       }
     }
 
-    // 2. Wires
-    const wireMeshes = this.wireManager.getWireMeshes();
-    if (wireMeshes.length > 0) {
-      const wireHits = centerRay.intersectObjects(wireMeshes, false);
+    // 2. Wires & Banana Plugs
+    const wireTargets = this.wireManager.getWireRaycastTargets();
+    if (wireTargets.length > 0) {
+      const wireHits = centerRay.intersectObjects(wireTargets, true);
       if (wireHits.length > 0) {
         const wireId = this.wireManager.findWireIdByMesh(wireHits[0].object);
         if (wireId) {
-          labAudio.playWireUnplug();
           this.wireManager.removeWire(wireId);
           return;
         }
@@ -2071,20 +2074,18 @@ export class Milestone1Scene {
     if (termHits.length > 0) {
       const termId = (termHits[0].object as any).terminalId as TerminalId;
       if (termId) {
-        labAudio.playWirePlug();
         this.wireManager.handleTerminalClick(termId);
         return true;
       }
     }
 
-    // 2. Check if user clicked/pinched directly on a wire to remove it
-    const wireMeshes = this.wireManager.getWireMeshes();
-    if (wireMeshes.length > 0) {
-      const wireHits = ray.intersectObjects(wireMeshes, false);
+    // 2. Check if user clicked/pinched directly on a wire or banana plug to remove it
+    const wireTargets = this.wireManager.getWireRaycastTargets();
+    if (wireTargets.length > 0) {
+      const wireHits = ray.intersectObjects(wireTargets, true);
       if (wireHits.length > 0) {
         const wireId = this.wireManager.findWireIdByMesh(wireHits[0].object);
         if (wireId) {
-          labAudio.playWireUnplug();
           this.wireManager.removeWire(wireId);
           return true;
         }
@@ -2119,9 +2120,9 @@ export class Milestone1Scene {
   }
 
   public handleSpatialPointSelect(pinchPos: THREE.Vector3): boolean {
-    // 1. Check closest terminal (within generous 7cm physical hand pinch reach)
+    // 1. Check closest terminal (within generous 8cm physical hand pinch reach)
     let closestTermId: TerminalId | null = null;
-    let closestTermDist = 0.07;
+    let closestTermDist = 0.08;
     for (const mesh of this.terminalMeshes) {
       const worldPos = new THREE.Vector3();
       mesh.getWorldPosition(worldPos);
@@ -2132,19 +2133,21 @@ export class Milestone1Scene {
       }
     }
     if (closestTermId) {
-      labAudio.playWirePlug();
       this.wireManager.handleTerminalClick(closestTermId);
       return true;
     }
 
-    // 2. Check closest wire (within 5cm reach)
-    for (const mesh of this.wireManager.getWireMeshes()) {
-      const worldPos = new THREE.Vector3();
-      mesh.getWorldPosition(worldPos);
-      if (worldPos.distanceTo(pinchPos) < 0.05) {
-        const wireId = this.wireManager.findWireIdByMesh(mesh);
-        if (wireId) {
-          labAudio.playWireUnplug();
+    // 2. Check closest wire plug or spline curve (within generous 8cm reach)
+    for (const [wireId, item] of this.wireManager.getAllWiresMap().entries()) {
+      if (
+        item.endCap1.position.distanceTo(pinchPos) < 0.08 ||
+        item.endCap2.position.distanceTo(pinchPos) < 0.08
+      ) {
+        this.wireManager.removeWire(wireId);
+        return true;
+      }
+      for (const pt of item.curve.points) {
+        if (pt.distanceTo(pinchPos) < 0.08) {
           this.wireManager.removeWire(wireId);
           return true;
         }
@@ -2196,11 +2199,11 @@ export class Milestone1Scene {
     }
 
     // 2. Wire hover
-    const wireMeshes = this.wireManager.getWireMeshes();
-    if (wireMeshes.length > 0) {
-      const wireHits = ray.intersectObjects(wireMeshes, false);
+    const wireTargets = this.wireManager.getWireRaycastTargets();
+    if (wireTargets.length > 0) {
+      const wireHits = ray.intersectObjects(wireTargets, true);
       if (wireHits.length > 0) {
-        return { hitPoint: wireHits[0].point, label: 'Wire (Pinch to unplug)' };
+        return { hitPoint: wireHits[0].point, label: 'Wire / Plug (Pinch to unplug)' };
       }
     }
 
@@ -2489,7 +2492,7 @@ export class Milestone1Scene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   };
 
-  public update() {
+  public update(isXRSession: boolean = false) {
     const now = performance.now();
     const delta = Math.min(0.05, (now - this.lastFrameTime) / 1000.0);
     this.lastFrameTime = now;
@@ -2551,6 +2554,15 @@ export class Milestone1Scene {
         halo.ring.scale.set(pulse, pulse, pulse);
       }
     }
+
+    // Fast in-place wire update when dragging objects (runs in both WebXR and desktop)
+    if (this.inputAbstraction.isDragging()) {
+      this.wireManager.updateAllWires();
+    }
+
+    // In active WebXR sessions (Apple Vision Pro), HMD tracking controls the camera pose.
+    // Skip desktop WASD movement and 2D mouse crosshair updates.
+    if (isXRSession) return;
 
     // 3. WASD + Arrow Keys Keyboard Walk Navigation with Physical Colliders
     const forward = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw)).normalize();

@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { XRHandModelFactory } from 'three/examples/jsm/webxr/XRHandModelFactory.js';
 import { HandJointVisualizer } from './HandJointVisualizer';
 import { TransientPointerVisualizer } from './TransientPointerVisualizer';
 import { InputAbstraction } from './InputAbstraction';
@@ -22,7 +21,6 @@ export class WebXRManager {
   private hand1: THREE.XRHandSpace;
   private controller0: THREE.XRTargetRaySpace;
   private controller1: THREE.XRTargetRaySpace;
-  private handModelFactory: XRHandModelFactory;
 
   // Transient pointer visualizers (gaze & pinch fallback)
   private transientPointerVisualizers: TransientPointerVisualizer[] = [];
@@ -73,15 +71,11 @@ export class WebXRManager {
     this.scene.add(this.leftHandVisualizer.group);
     this.scene.add(this.rightHandVisualizer.group);
 
-    // Three.js native WebXR Hand Models (spheres profile works offline with 0 asset latency)
-    this.handModelFactory = new XRHandModelFactory();
-
+    // Native WebXR Hand tracking
     this.hand0 = this.renderer.xr.getHand(0);
-    this.hand0.add(this.handModelFactory.createHandModel(this.hand0, 'spheres'));
     this.scene.add(this.hand0);
 
     this.hand1 = this.renderer.xr.getHand(1);
-    this.hand1.add(this.handModelFactory.createHandModel(this.hand1, 'spheres'));
     this.scene.add(this.hand1);
 
     // Native WebXR Controllers (for visionOS gaze & pinch rays)

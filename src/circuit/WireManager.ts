@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { WireConnection, WireColor, TerminalId } from '../types/circuit';
+import { labAudio } from '../audio/LabSoundSynthesizer';
 
 export interface TerminalNode {
   id: TerminalId;
@@ -15,6 +16,7 @@ export class WireManager {
   private wires: Map<string, {
     connection: WireConnection;
     mesh: THREE.Mesh;
+    hitMesh: THREE.Mesh;
     curve: THREE.CatmullRomCurve3;
     endCap1: THREE.Object3D;
     endCap2: THREE.Object3D;
@@ -74,8 +76,9 @@ export class WireManager {
 
   public handleTerminalClick(id: TerminalId): { connected: boolean; wire?: WireConnection } {
     if (!this.selectedTerminal) {
-      // First terminal selected
+      // First terminal selected: trigger Apple spatial glass tap sound
       this.selectedTerminal = id;
+      labAudio.playTerminalSelect();
       if (this.onTerminalSelected) this.onTerminalSelected(id);
       return { connected: false };
     }
@@ -107,6 +110,7 @@ export class WireManager {
     }
 
     const wire = this.createWire(from, to, this.activeWireColor);
+    labAudio.playWirePlug();
     return { connected: true, wire };
   }
 
@@ -126,7 +130,9 @@ export class WireManager {
   public removeWire(id: string) {
     const item = this.wires.get(id);
     if (item) {
+      labAudio.playWireUnplug();
       this.group.remove(item.mesh);
+      this.group.remove(item.hitMesh);
       this.group.remove(item.endCap1);
       this.group.remove(item.endCap2);
 
@@ -136,6 +142,15 @@ export class WireManager {
           item.mesh.material.forEach((m) => m.dispose());
         } else {
           item.mesh.material.dispose();
+        }
+      }
+
+      if (item.hitMesh.geometry) item.hitMesh.geometry.dispose();
+      if (item.hitMesh.material) {
+        if (Array.isArray(item.hitMesh.material)) {
+          item.hitMesh.material.forEach((m) => m.dispose());
+        } else {
+          item.hitMesh.material.dispose();
         }
       }
 
@@ -205,6 +220,31 @@ export class WireManager {
     return Array.from(this.wires.values()).map((w) => w.mesh);
   }
 
+  /**
+   * Returns all raycast targets for wires: visual mesh, thick invisible hitMesh (5cm tube),
+   * and banana plugs with generous hit spheres.
+   */
+  public getWireRaycastTargets(): THREE.Object3D[] {
+    const targets: THREE.Object3D[] = [];
+    for (const item of this.wires.values()) {
+      targets.push(item.mesh);
+      targets.push(item.hitMesh);
+      targets.push(item.endCap1);
+      targets.push(item.endCap2);
+      item.endCap1.traverse((c) => {
+        if (c !== item.endCap1) targets.push(c);
+      });
+      item.endCap2.traverse((c) => {
+        if (c !== item.endCap2) targets.push(c);
+      });
+    }
+    return targets;
+  }
+
+  public getAllWiresMap() {
+    return this.wires;
+  }
+
   public findWireIdByMesh(hitObject: THREE.Object3D): string | undefined {
     let cur: THREE.Object3D | null = hitObject;
     while (cur) {
@@ -212,7 +252,7 @@ export class WireManager {
         return cur.userData.wireId as string;
       }
       for (const [id, item] of this.wires.entries()) {
-        if (item.mesh === cur || item.endCap1 === cur || item.endCap2 === cur) {
+        if (item.mesh === cur || item.hitMesh === cur || item.endCap1 === cur || item.endCap2 === cur) {
           return id;
         }
       }
@@ -358,6 +398,10 @@ export class WireManager {
 
     if (!tFrom || !tTo) return;
 
+    // Force update matrix before positioning
+    tFrom.anchorMesh.updateWorldMatrix(true, false);
+    tTo.anchorMesh.updateWorldMatrix(true, false);
+
     const p1 = this.getTerminalWorldPos(connection.fromTerminal);
     const p2 = this.getTerminalWorldPos(connection.toTerminal);
 
@@ -377,14 +421,23 @@ export class WireManager {
     mesh.userData = { isWire: true, wireId: connection.id };
     this.group.add(mesh);
 
+    // Invisible 5cm-diameter hitMesh tube around the wire curve for effortless gaze/touch raycasting
+    const hitGeo = new THREE.TubeGeometry(curve, 24, 0.025, 8, false);
+    const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+    const hitMesh = new THREE.Mesh(hitGeo, hitMat);
+    hitMesh.userData = { isWire: true, wireId: connection.id };
+    this.group.add(hitMesh);
+
     // Realistic Molded Rubber Banana Plug Connectors
     const bootGeo = new THREE.CylinderGeometry(0.0055, 0.0065, 0.026, 16);
     const collarGeo = new THREE.CylinderGeometry(0.007, 0.007, 0.006, 16);
     const pinGeo = new THREE.CylinderGeometry(0.0024, 0.0024, 0.016, 12);
+    const hitSphereGeo = new THREE.SphereGeometry(0.035, 8, 8);
 
     const bootMat = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.4 });
     const collarMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
     const pinMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.95, roughness: 0.1 });
+    const hitSphereMat = new THREE.MeshBasicMaterial({ visible: false });
 
     const createPlug = (pos: THREE.Vector3) => {
       const plug = new THREE.Group();
@@ -405,6 +458,12 @@ export class WireManager {
       pin.position.y = -0.006;
       plug.add(pin);
 
+      // Generous 7cm invisible hit sphere centered on plug for instant gaze and pinch detection
+      const hitSphere = new THREE.Mesh(hitSphereGeo, hitSphereMat);
+      hitSphere.position.y = 0.015;
+      hitSphere.userData = { isWire: true, wireId: connection.id };
+      plug.add(hitSphere);
+
       return plug;
     };
 
@@ -416,6 +475,7 @@ export class WireManager {
     this.wires.set(connection.id, {
       connection,
       mesh,
+      hitMesh,
       curve,
       endCap1,
       endCap2,
@@ -429,6 +489,11 @@ export class WireManager {
     if (this.wires.size === 0) return;
 
     for (const [, item] of this.wires.entries()) {
+      const tFrom = this.terminals.get(item.connection.fromTerminal);
+      const tTo = this.terminals.get(item.connection.toTerminal);
+      if (tFrom) tFrom.anchorMesh.updateWorldMatrix(true, false);
+      if (tTo) tTo.anchorMesh.updateWorldMatrix(true, false);
+
       const p1 = this.getTerminalWorldPos(item.connection.fromTerminal);
       const p2 = this.getTerminalWorldPos(item.connection.toTerminal);
 
@@ -440,10 +505,14 @@ export class WireManager {
       );
       item.curve.points = points;
 
-      // Re-generate high-res tube geometry without destroying mesh or triggering React
+      // Re-generate high-res tube geometry and hitMesh
       const newGeo = new THREE.TubeGeometry(item.curve, 36, 0.0035, 10, false);
       item.mesh.geometry.dispose();
       item.mesh.geometry = newGeo;
+
+      const newHitGeo = new THREE.TubeGeometry(item.curve, 24, 0.025, 8, false);
+      item.hitMesh.geometry.dispose();
+      item.hitMesh.geometry = newHitGeo;
 
       item.endCap1.position.copy(p1);
       item.endCap2.position.copy(p2);
