@@ -63,7 +63,7 @@ export const WireToolbar: React.FC<Props> = ({
   const [wireListOpen, setWireListOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-2 sm:bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-30 w-auto max-w-[calc(100vw-1rem)] sm:max-w-2xl lg:max-w-3xl px-1 sm:px-2 flex flex-col items-center gap-1.5 pointer-events-auto transition-all duration-200">
+    <div className="fixed bottom-12 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 z-30 w-auto max-w-[calc(100vw-1rem)] sm:max-w-xl md:max-w-2xl px-1 sm:px-2 flex flex-col items-center gap-1.5 pointer-events-auto transition-all duration-200">
       {/* Individual Wire Inspector Popover */}
       {wireListOpen && wires.length > 0 && (
         <div className="w-full bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-2.5 sm:p-3 shadow-2xl text-slate-200 text-xs animate-in fade-in slide-in-from-bottom-2 duration-150">
@@ -165,8 +165,11 @@ export const WireToolbar: React.FC<Props> = ({
             </div>
           ) : (
             <div className="min-w-0 flex items-center gap-1.5 justify-center">
-              <span className="hidden lg:inline text-[11px] font-mono text-slate-400 truncate">
+              <span className="hidden 2xl:inline text-[11px] font-mono text-slate-400 truncate">
                 Click 3D terminals to connect • Click wire to remove
+              </span>
+              <span className="hidden xl:inline 2xl:hidden text-[10px] font-mono text-slate-400 truncate">
+                Click terminals to wire
               </span>
               {wires.length > 0 && (
                 <button

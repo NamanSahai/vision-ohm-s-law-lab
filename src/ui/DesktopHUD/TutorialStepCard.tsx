@@ -85,7 +85,7 @@ export const TutorialStepCard: React.FC<Props> = ({
 
   if (isCollapsed) {
     return (
-      <div className="fixed top-16 sm:top-20 left-14 sm:left-16 md:left-48 z-25 max-w-[calc(100vw-4.5rem)] sm:max-w-xs transition-all duration-300">
+      <div className="pointer-events-auto max-w-full transition-all duration-300">
         <button
           type="button"
           onClick={() => setIsCollapsed(false)}
@@ -93,7 +93,7 @@ export const TutorialStepCard: React.FC<Props> = ({
           title="Expand Tutorial Step"
         >
           <GraduationCap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-          <span className="truncate">Step {step.id}: {step.title.split('. ')[1] || step.title}</span>
+          <span className="truncate max-w-[150px] sm:max-w-[200px]">Step {step.id}: {step.title.split('. ')[1] || step.title}</span>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </button>
       </div>
@@ -101,7 +101,7 @@ export const TutorialStepCard: React.FC<Props> = ({
   }
 
   return (
-    <div className="fixed top-16 sm:top-20 left-14 sm:left-16 md:left-48 z-25 max-w-[calc(100vw-4.5rem)] sm:max-w-sm w-full bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-3 sm:p-4 text-slate-200 space-y-2.5 sm:space-y-3 font-sans transition-all duration-300">
+    <div className="pointer-events-auto max-w-full w-full bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-3 sm:p-4 text-slate-200 space-y-2.5 sm:space-y-3 font-sans transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-2">
         <div className="flex items-center gap-1.5 truncate">

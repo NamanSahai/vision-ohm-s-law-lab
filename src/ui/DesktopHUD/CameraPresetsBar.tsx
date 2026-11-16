@@ -25,7 +25,7 @@ export const CameraPresetsBar: React.FC<Props> = ({
   ];
 
   return (
-    <div className="fixed top-16 sm:top-20 left-2 sm:left-4 z-30 flex flex-col gap-1 sm:gap-1.5 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-1.5 sm:p-2 shadow-2xl text-xs font-sans">
+    <div className="pointer-events-auto flex flex-col gap-1 sm:gap-1.5 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-1.5 sm:p-2 shadow-2xl text-xs font-sans w-fit">
       <div className="hidden sm:block text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-0.5">
         Camera Views
       </div>

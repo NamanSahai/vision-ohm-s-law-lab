@@ -68,8 +68,8 @@ export const CircuitStatusBanner: React.FC<Props> = ({
           <span>{statusText}</span>
         </div>
 
-        {/* Circuit Loop Breadcrumb Pipeline (Full on XL, Compact on MD, Hidden on Mobile) */}
-        <div className="hidden xl:flex items-center gap-1.5 text-slate-400 font-mono text-[11px] shrink-0">
+        {/* Circuit Loop Breadcrumb Pipeline (Full on 2XL, Compact on XL, Minimal on <= LG) */}
+        <div className="hidden 2xl:flex items-center gap-1.5 text-slate-400 font-mono text-[11px] shrink-0">
           {/* Node 1: DC Power Supply */}
           <button
             onClick={onTogglePower}
@@ -130,8 +130,8 @@ export const CircuitStatusBanner: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Compact Summary for Medium Screens */}
-        <div className="hidden sm:flex xl:hidden items-center gap-1.5 text-slate-400 font-mono text-[10px]">
+        {/* Compact Summary for Large Screens (XL) */}
+        <div className="hidden xl:flex 2xl:hidden items-center gap-1.5 text-slate-400 font-mono text-[10px]">
           <span className={isPowerOn ? 'text-red-300' : 'text-slate-500'}>
             PS: {isPowerOn ? `${circuitStatus.appliedVoltage.toFixed(1)}V` : 'OFF'}
           </span>
@@ -145,9 +145,9 @@ export const CircuitStatusBanner: React.FC<Props> = ({
           </span>
         </div>
 
-        {/* Live Power Readout (P = V * I) */}
+        {/* Live Power Readout (P = V * I) on XL+ */}
         {isCurrentFlowing && (
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-950/60 border border-indigo-700/50 text-indigo-300 font-mono text-[10px] sm:text-[11px] font-semibold shrink-0">
+          <div className="hidden xl:flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-950/60 border border-indigo-700/50 text-indigo-300 font-mono text-[10px] sm:text-[11px] font-semibold shrink-0">
             <Zap className="w-3 h-3 text-indigo-400" />
             <span className="hidden sm:inline">P = </span>
             <span>{powerMilliwatts.toFixed(1)} mW</span>
