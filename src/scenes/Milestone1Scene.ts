@@ -218,6 +218,7 @@ export class Milestone1Scene {
 
     // 8. Bind resize and desktop mouse events
     window.addEventListener('resize', this.onWindowResize);
+    this.onWindowResize();
     this.setupDesktopEvents(canvas);
   }
 
@@ -2294,9 +2295,20 @@ export class Milestone1Scene {
   }
 
   private onWindowResize = () => {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const aspect = width / height;
+    this.camera.aspect = aspect;
+
+    // Dynamic horizontal FOV adaptation:
+    // When aspect ratio is narrower than 1.6 (e.g. tablet, portrait, split-screen),
+    // automatically scale FOV so the entire workbench and apparatus remain completely in frame.
+    const fovFactor = aspect < 1.6 ? Math.min(1.55, 1.6 / Math.max(0.65, aspect)) : 1.0;
+    this.camera.fov = this.targetFov * fovFactor;
+
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   };
 
   public update() {
@@ -2391,9 +2403,13 @@ export class Milestone1Scene {
       this.camera.position.copy(resolvedPos);
     }
 
-    // Smooth FOV zoom update
-    if (Math.abs(this.camera.fov - this.targetFov) > 0.05) {
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, this.targetFov, Math.min(1.0, delta * 10));
+    // Smooth FOV zoom update with aspect ratio scaling
+    const aspect = window.innerWidth / window.innerHeight;
+    const fovFactor = aspect < 1.6 ? Math.min(1.55, 1.6 / Math.max(0.65, aspect)) : 1.0;
+    const computedTargetFov = this.targetFov * fovFactor;
+
+    if (Math.abs(this.camera.fov - computedTargetFov) > 0.05) {
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, computedTargetFov, Math.min(1.0, delta * 10));
       this.camera.updateProjectionMatrix();
     }
 

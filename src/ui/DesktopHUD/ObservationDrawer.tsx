@@ -122,14 +122,14 @@ export const ObservationDrawer: React.FC<Props> = ({
   };
 
   return (
-    <div className={`fixed bottom-0 right-4 z-40 transition-all duration-300 pointer-events-auto ${
-      isOpen ? 'w-full max-w-lg' : 'w-auto max-w-xs sm:max-w-sm'
+    <div className={`fixed bottom-0 right-2 sm:right-4 z-40 transition-all duration-300 pointer-events-auto ${
+      isOpen ? 'w-full max-w-[calc(100vw-1rem)] sm:max-w-lg' : 'w-auto max-w-fit sm:max-w-xs md:max-w-sm'
     }`}>
       {/* Toggle button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-900/95 hover:bg-slate-800 text-slate-200 border-t border-x border-slate-700/80 rounded-t-2xl shadow-2xl backdrop-blur-xl cursor-pointer transition font-sans gap-2"
+        className="w-full flex items-center justify-between px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-slate-900/95 hover:bg-slate-800 text-slate-200 border-t border-x border-slate-700/80 rounded-t-2xl shadow-2xl backdrop-blur-xl cursor-pointer transition font-sans gap-1.5 sm:gap-2"
       >
         <div className="flex items-center gap-1.5 sm:gap-2 truncate">
           <Table className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -146,8 +146,8 @@ export const ObservationDrawer: React.FC<Props> = ({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 text-slate-400">
-          <span className="text-[11px] font-mono text-cyan-300">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 shrink-0">
+          <span className="text-[11px] font-mono text-cyan-300 hidden md:inline">
             {circuitStatus.isCircuitClosed && circuitStatus.isPowerOn
               ? `Live: ${circuitStatus.voltmeterReading.toFixed(2)}V • ${circuitStatus.ammeterReading.toFixed(1)}mA`
               : 'Supply Off'}

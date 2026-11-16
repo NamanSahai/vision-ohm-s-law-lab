@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, ChevronLeft, HelpCircle, CheckCircle, GraduationCap } from 'lucide-react';
+import { ChevronRight, ChevronLeft, HelpCircle, CheckCircle, GraduationCap, ChevronUp, ChevronDown } from 'lucide-react';
 
 export interface TutorialStep {
   id: number;
@@ -79,27 +79,55 @@ export const TutorialStepCard: React.FC<Props> = ({
   onPrevStep,
 }) => {
   const [showHint, setShowHint] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
   const step = TUTORIAL_STEPS[currentStepIndex];
   const progressPercent = ((currentStepIndex + 1) / TUTORIAL_STEPS.length) * 100;
 
-  return (
-    <div className="fixed top-20 left-48 z-30 max-w-sm w-full bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-4 text-slate-200 space-y-3 font-sans">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-        <div className="flex items-center gap-1.5">
-          <GraduationCap className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs font-bold text-white uppercase tracking-wider">
-            Tutorial Guide • Step {step.id} of {TUTORIAL_STEPS.length}
-          </span>
-        </div>
+  if (isCollapsed) {
+    return (
+      <div className="fixed top-16 sm:top-20 left-14 sm:left-16 md:left-48 z-25 max-w-[calc(100vw-4.5rem)] sm:max-w-xs transition-all duration-300">
         <button
           type="button"
-          onClick={() => setShowHint(!showHint)}
-          className="text-amber-400 hover:text-amber-300 text-xs flex items-center gap-1"
+          onClick={() => setIsCollapsed(false)}
+          className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/95 border border-cyan-500/60 text-white shadow-xl backdrop-blur-md text-xs font-semibold hover:bg-slate-800 transition"
+          title="Expand Tutorial Step"
         >
-          <HelpCircle className="w-3.5 h-3.5" />
-          <span>{showHint ? 'Hide Hint' : 'Hint'}</span>
+          <GraduationCap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          <span className="truncate">Step {step.id}: {step.title.split('. ')[1] || step.title}</span>
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed top-16 sm:top-20 left-14 sm:left-16 md:left-48 z-25 max-w-[calc(100vw-4.5rem)] sm:max-w-sm w-full bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-3 sm:p-4 text-slate-200 space-y-2.5 sm:space-y-3 font-sans transition-all duration-300">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div className="flex items-center gap-1.5 truncate">
+          <GraduationCap className="w-4 h-4 text-cyan-400 shrink-0" />
+          <span className="text-xs font-bold text-white uppercase tracking-wider truncate">
+            Tutorial • Step {step.id} of {TUTORIAL_STEPS.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowHint(!showHint)}
+            className="text-amber-400 hover:text-amber-300 text-xs flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{showHint ? 'Hide Hint' : 'Hint'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(true)}
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            title="Minimize Tutorial Card"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Progress Bar */}
@@ -111,14 +139,14 @@ export const TutorialStepCard: React.FC<Props> = ({
       </div>
 
       {/* Step Title & Instruction */}
-      <div className="space-y-1.5">
-        <h3 className="font-bold text-cyan-300 text-sm">{step.title}</h3>
+      <div className="space-y-1 sm:space-y-1.5 max-h-36 sm:max-h-48 overflow-y-auto pr-1">
+        <h3 className="font-bold text-cyan-300 text-xs sm:text-sm">{step.title}</h3>
         <p className="text-xs text-slate-300 leading-relaxed">{step.instruction}</p>
       </div>
 
       {/* Expandable Hint Box */}
       {showHint && (
-        <div className="p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-200 text-xs leading-relaxed">
+        <div className="p-2 sm:p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-200 text-xs leading-relaxed animate-in fade-in duration-150">
           <strong>Tip:</strong> {step.hint}
         </div>
       )}
@@ -129,7 +157,7 @@ export const TutorialStepCard: React.FC<Props> = ({
           type="button"
           onClick={onPrevStep}
           disabled={currentStepIndex === 0}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-semibold text-slate-300 transition"
+          className="flex items-center gap-1 px-3 py-1 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-semibold text-slate-300 transition"
         >
           <ChevronLeft className="w-3.5 h-3.5" /> Prev
         </button>
@@ -138,7 +166,7 @@ export const TutorialStepCard: React.FC<Props> = ({
           type="button"
           onClick={onNextStep}
           disabled={currentStepIndex === TUTORIAL_STEPS.length - 1}
-          className="flex items-center gap-1 px-4 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold text-white transition shadow"
+          className="flex items-center gap-1 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold text-white transition shadow"
         >
           {currentStepIndex === TUTORIAL_STEPS.length - 1 ? (
             <>

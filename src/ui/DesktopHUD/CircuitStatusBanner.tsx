@@ -28,6 +28,7 @@ export const CircuitStatusBanner: React.FC<Props> = ({
   const current = circuitStatus.circuitCurrent * 1000; // in mA
   const voltage = circuitStatus.voltmeterReading;
   const isCurrentFlowing = isPowerOn && isClosed && current > 0.01;
+  const powerMilliwatts = voltage * current;
 
   // Status diagnostics badge
   let statusBadgeColor = 'bg-slate-800 text-slate-300 border-slate-700';
@@ -57,22 +58,22 @@ export const CircuitStatusBanner: React.FC<Props> = ({
   }
 
   return (
-    <div className="fixed top-18 left-1/2 -translate-x-1/2 z-20 pointer-events-auto transition-all duration-300 w-auto max-w-[calc(100vw-2rem)]">
-      <div className="flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 shadow-2xl shadow-black/50 text-xs overflow-hidden">
+    <div className="fixed top-14 sm:top-16 lg:top-18 left-1/2 -translate-x-1/2 z-20 pointer-events-auto transition-all duration-300 w-auto max-w-[calc(100vw-1rem)]">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 shadow-2xl shadow-black/50 text-xs overflow-hidden">
         {/* Status Pill */}
         <div
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold tracking-wider uppercase border text-[10px] ${statusBadgeColor}`}
+          className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl font-bold tracking-wider uppercase border text-[9px] sm:text-[10px] shrink-0 ${statusBadgeColor}`}
         >
           {statusIcon}
           <span>{statusText}</span>
         </div>
 
-        {/* Circuit Loop Breadcrumb Pipeline */}
-        <div className="hidden md:flex items-center gap-1.5 text-slate-400 font-mono text-[11px]">
+        {/* Circuit Loop Breadcrumb Pipeline (Full on XL, Compact on MD, Hidden on Mobile) */}
+        <div className="hidden xl:flex items-center gap-1.5 text-slate-400 font-mono text-[11px] shrink-0">
           {/* Node 1: DC Power Supply */}
           <button
             onClick={onTogglePower}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border transition ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border transition cursor-pointer ${
               isPowerOn
                 ? 'bg-red-950/40 border-red-700/50 text-red-300 font-semibold'
                 : 'bg-slate-800/40 border-slate-700/40 text-slate-400 hover:text-slate-200'
@@ -88,7 +89,7 @@ export const CircuitStatusBanner: React.FC<Props> = ({
           {/* Node 2: SPST Switch */}
           <button
             onClick={onToggleSwitch}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border transition ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border transition cursor-pointer ${
               isSwitchClosed
                 ? 'bg-amber-950/40 border-amber-700/50 text-amber-300 font-semibold'
                 : 'bg-slate-800/40 border-slate-700/40 text-slate-400 hover:text-slate-200'
@@ -129,11 +130,27 @@ export const CircuitStatusBanner: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Live Power Indicator */}
+        {/* Compact Summary for Medium Screens */}
+        <div className="hidden sm:flex xl:hidden items-center gap-1.5 text-slate-400 font-mono text-[10px]">
+          <span className={isPowerOn ? 'text-red-300' : 'text-slate-500'}>
+            PS: {isPowerOn ? `${circuitStatus.appliedVoltage.toFixed(1)}V` : 'OFF'}
+          </span>
+          <span>•</span>
+          <span className={isSwitchClosed ? 'text-amber-300' : 'text-slate-500'}>
+            SW: {isSwitchClosed ? 'CLOSED' : 'OPEN'}
+          </span>
+          <span>•</span>
+          <span className={isCurrentFlowing ? 'text-emerald-300' : 'text-slate-500'}>
+            I: {current.toFixed(1)}mA
+          </span>
+        </div>
+
+        {/* Live Power Readout (P = V * I) */}
         {isCurrentFlowing && (
-          <div className="hidden lg:flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-950/60 border border-indigo-700/50 text-indigo-300 font-mono text-[11px]">
-            <Zap className="w-3 h-3 text-yellow-400" />
-            <span>P = {(voltage * (current / 1000) * 1000).toFixed(1)} mW</span>
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-950/60 border border-indigo-700/50 text-indigo-300 font-mono text-[10px] sm:text-[11px] font-semibold shrink-0">
+            <Zap className="w-3 h-3 text-indigo-400" />
+            <span className="hidden sm:inline">P = </span>
+            <span>{powerMilliwatts.toFixed(1)} mW</span>
           </div>
         )}
       </div>

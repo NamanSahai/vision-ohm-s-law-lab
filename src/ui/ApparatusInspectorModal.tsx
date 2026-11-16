@@ -13,43 +13,45 @@ export const ApparatusInspectorModal: React.FC<Props> = ({ isOpen, onClose, init
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md">
       <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden text-slate-200 font-sans">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-800/80">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setTab('equipment')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                  tab === 'equipment' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Cpu className="w-4 h-4" /> Equipment Datasheet
-              </button>
-              <button
-                type="button"
-                onClick={() => setTab('safety')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                  tab === 'safety' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <ShieldAlert className="w-4 h-4" /> Safety Instructions
-              </button>
-            </div>
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-slate-800 bg-slate-800/80 gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setTab('equipment')}
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                tab === 'equipment' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Cpu className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Equipment Datasheet</span>
+              <span className="sm:hidden">Equipment</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('safety')}
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                tab === 'safety' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Safety Instructions</span>
+              <span className="sm:hidden">Safety</span>
+            </button>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/60 transition"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/60 transition shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-sm leading-relaxed">
+        <div className="p-3 sm:p-6 space-y-3 sm:space-y-4 max-h-[75vh] overflow-y-auto text-xs sm:text-sm leading-relaxed">
           {tab === 'equipment' && (
             <div className="space-y-4">
               {/* Equipment 1: DC Power Supply */}

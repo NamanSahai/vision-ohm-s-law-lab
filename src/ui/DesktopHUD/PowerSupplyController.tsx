@@ -27,7 +27,7 @@ export const PowerSupplyController: React.FC<Props> = ({
   onToggleSwitch,
   onVoltageChange,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 640 : false));
 
   const handleVoltageAdjust = (val: number) => {
     const clamped = Math.max(0, Math.min(10, Math.round(val * 10) / 10));
@@ -55,16 +55,18 @@ export const PowerSupplyController: React.FC<Props> = ({
       : 0;
 
   return (
-    <div className="fixed top-20 right-4 z-30 max-w-xs w-full bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 rounded-2xl shadow-2xl p-4 text-slate-200 space-y-3 font-sans transition-all duration-300">
+    <div className={`fixed top-16 sm:top-20 right-2 sm:right-4 z-30 ${
+      isCollapsed ? 'w-auto max-w-fit' : 'w-full max-w-[calc(100vw-1rem)] sm:max-w-xs'
+    } max-h-[calc(100vh-5.5rem)] overflow-y-auto bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 rounded-2xl shadow-2xl p-3 sm:p-4 text-slate-200 space-y-2.5 sm:space-y-3 font-sans transition-all duration-300 pointer-events-auto`}>
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-amber-400" />
-          <span className="text-xs font-bold tracking-wider text-white uppercase">
-            Laboratory Controller
+      <div className={`flex items-center justify-between ${isCollapsed ? '' : 'border-b border-slate-800 pb-2.5'} gap-2`}>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+          <span className="text-xs font-bold tracking-wider text-white uppercase truncate">
+            <span className="hidden sm:inline">Laboratory </span>Controller
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
               circuitStatus.isPowerOn && circuitStatus.isCircuitClosed
@@ -77,7 +79,7 @@ export const PowerSupplyController: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+            className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
             title={isCollapsed ? 'Expand Controller' : 'Minimize Controller'}
           >
             {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
