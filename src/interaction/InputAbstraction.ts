@@ -9,11 +9,22 @@ export interface DragState {
   initialObjectPos: THREE.Vector3;
 }
 
+export interface SpatialInteractionHandler {
+  onSpatialRaySelect: (origin: THREE.Vector3, direction: THREE.Vector3) => boolean;
+  onSpatialPointSelect?: (pinchPos: THREE.Vector3) => boolean;
+  onSpatialRayHover?: (origin: THREE.Vector3, direction: THREE.Vector3) => { hitPoint: THREE.Vector3 | null; label?: string };
+}
+
 export class InputAbstraction {
   private interactables: InteractableObject3D[] = [];
   private activeDrags: Map<string, DragState> = new Map();
   private raycaster: THREE.Raycaster = new THREE.Raycaster();
   private hoveredObjects: Map<string, InteractableObject3D> = new Map();
+  private spatialHandler: SpatialInteractionHandler | null = null;
+
+  public setSpatialHandler(handler: SpatialInteractionHandler | null) {
+    this.spatialHandler = handler;
+  }
 
   public register(object: InteractableObject3D) {
     if (!this.interactables.includes(object)) {
@@ -49,9 +60,14 @@ export class InputAbstraction {
 
     if (isPinching && pinchPos) {
       if (!existingDrag) {
-        // Attempt to find closest interactable within grab radius (10cm)
+        // 1. High-priority spatial targets (terminals, wires, knife switch, power button)
+        if (this.spatialHandler?.onSpatialPointSelect?.(pinchPos)) {
+          return;
+        }
+
+        // 2. Attempt to find closest apparatus within grab reach (14cm)
         let closestObj: InteractableObject3D | null = null;
-        let closestDist = 0.12; // 12cm reach
+        let closestDist = 0.14;
 
         for (const obj of this.interactables) {
           const worldPos = new THREE.Vector3();
@@ -82,6 +98,14 @@ export class InputAbstraction {
     rayOrigin: THREE.Vector3,
     rayDirection: THREE.Vector3
   ): { hitObject: InteractableObject3D | null; hitPoint: THREE.Vector3 | null } {
+    // 1. Check if spatial handler has a specific interactive component hit
+    if (this.spatialHandler?.onSpatialRayHover) {
+      const spatialHover = this.spatialHandler.onSpatialRayHover(rayOrigin, rayDirection);
+      if (spatialHover && spatialHover.hitPoint) {
+        return { hitObject: null, hitPoint: spatialHover.hitPoint };
+      }
+    }
+
     this.raycaster.set(rayOrigin, rayDirection);
     const intersects = this.raycaster.intersectObjects(this.interactables, true);
 
@@ -108,6 +132,12 @@ export class InputAbstraction {
     isSelectStart: boolean
   ) {
     if (isSelectStart) {
+      // 1. High-priority spatial targets (terminals, wires, knife switch, power button)
+      if (this.spatialHandler?.onSpatialRaySelect(rayOrigin, rayDirection)) {
+        return;
+      }
+
+      // 2. Otherwise pick up apparatus
       const { hitObject, hitPoint } = this.raycastPointer(rayOrigin, rayDirection);
       if (hitObject && hitPoint) {
         this.startDrag(grabberId, hitObject, hitPoint);

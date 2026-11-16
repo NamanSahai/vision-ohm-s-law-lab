@@ -216,7 +216,10 @@ export class Milestone1Scene {
     this.buildInteractiveObjects();
     this.registerAllTerminals();
 
-    // 8. Bind resize and desktop mouse events
+    // 8. Bind spatial interaction handler for WebXR (visionOS Gaze & Pinch and Hand Tracking)
+    this.setupSpatialInteraction();
+
+    // 9. Bind resize and desktop mouse events
     window.addEventListener('resize', this.onWindowResize);
     this.onWindowResize();
     this.setupDesktopEvents(canvas);
@@ -698,8 +701,8 @@ export class Milestone1Scene {
     anchor.position.copy(localOffset);
     parentGroup.add(anchor);
 
-    // Click target mesh (sphere volume for easy, accurate raycasting)
-    const hitGeo = new THREE.SphereGeometry(0.024, 12, 12);
+    // Click target mesh (generous 4.5cm sphere volume for effortless raycasting & hand pinch in visionOS)
+    const hitGeo = new THREE.SphereGeometry(0.045, 14, 14);
     const hitMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       transparent: true,
@@ -2043,6 +2046,181 @@ export class Milestone1Scene {
         return;
       }
     }
+  }
+
+  // --- WebXR Spatial Interaction Dispatcher (visionOS Safari & Hand Tracking) ---
+  private setupSpatialInteraction() {
+    this.inputAbstraction.setSpatialHandler({
+      onSpatialRaySelect: (origin: THREE.Vector3, direction: THREE.Vector3) => {
+        return this.handleSpatialRaySelect(origin, direction);
+      },
+      onSpatialPointSelect: (pinchPos: THREE.Vector3) => {
+        return this.handleSpatialPointSelect(pinchPos);
+      },
+      onSpatialRayHover: (origin: THREE.Vector3, direction: THREE.Vector3) => {
+        return this.handleSpatialRayHover(origin, direction);
+      },
+    });
+  }
+
+  public handleSpatialRaySelect(origin: THREE.Vector3, direction: THREE.Vector3): boolean {
+    const ray = new THREE.Raycaster(origin, direction);
+
+    // 1. Check if user clicked/pinched on a 3D terminal socket
+    const termHits = ray.intersectObjects(this.terminalMeshes, false);
+    if (termHits.length > 0) {
+      const termId = (termHits[0].object as any).terminalId as TerminalId;
+      if (termId) {
+        labAudio.playWirePlug();
+        this.wireManager.handleTerminalClick(termId);
+        return true;
+      }
+    }
+
+    // 2. Check if user clicked/pinched directly on a wire to remove it
+    const wireMeshes = this.wireManager.getWireMeshes();
+    if (wireMeshes.length > 0) {
+      const wireHits = ray.intersectObjects(wireMeshes, false);
+      if (wireHits.length > 0) {
+        const wireId = this.wireManager.findWireIdByMesh(wireHits[0].object);
+        if (wireId) {
+          labAudio.playWireUnplug();
+          this.wireManager.removeWire(wireId);
+          return true;
+        }
+      }
+    }
+
+    // 3. Check 3D knife switch direct click
+    if (this.switchGroup) {
+      const switchHits = ray.intersectObjects(this.switchGroup.children, true);
+      if (switchHits.length > 0) {
+        if (this.isKnifeClosed) {
+          labAudio.playKnifeSwitchOpen();
+        } else {
+          labAudio.playKnifeSwitchClose();
+        }
+        if (this.onToggleSwitch) this.onToggleSwitch();
+        return true;
+      }
+    }
+
+    // 4. Check 3D power supply rocker switch direct click
+    if (this.psSwitchMesh) {
+      const psHits = ray.intersectObject(this.psSwitchMesh, false);
+      if (psHits.length > 0) {
+        labAudio.playPowerSwitch(!this.currentCircuitStatus?.isPowerOn);
+        if (this.onTogglePower) this.onTogglePower();
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public handleSpatialPointSelect(pinchPos: THREE.Vector3): boolean {
+    // 1. Check closest terminal (within generous 7cm physical hand pinch reach)
+    let closestTermId: TerminalId | null = null;
+    let closestTermDist = 0.07;
+    for (const mesh of this.terminalMeshes) {
+      const worldPos = new THREE.Vector3();
+      mesh.getWorldPosition(worldPos);
+      const dist = worldPos.distanceTo(pinchPos);
+      if (dist < closestTermDist) {
+        closestTermDist = dist;
+        closestTermId = (mesh as any).terminalId as TerminalId;
+      }
+    }
+    if (closestTermId) {
+      labAudio.playWirePlug();
+      this.wireManager.handleTerminalClick(closestTermId);
+      return true;
+    }
+
+    // 2. Check closest wire (within 5cm reach)
+    for (const mesh of this.wireManager.getWireMeshes()) {
+      const worldPos = new THREE.Vector3();
+      mesh.getWorldPosition(worldPos);
+      if (worldPos.distanceTo(pinchPos) < 0.05) {
+        const wireId = this.wireManager.findWireIdByMesh(mesh);
+        if (wireId) {
+          labAudio.playWireUnplug();
+          this.wireManager.removeWire(wireId);
+          return true;
+        }
+      }
+    }
+
+    // 3. Check knife switch (within 12cm reach)
+    if (this.switchGroup) {
+      const switchPos = new THREE.Vector3();
+      this.switchGroup.getWorldPosition(switchPos);
+      if (switchPos.distanceTo(pinchPos) < 0.12) {
+        if (this.isKnifeClosed) {
+          labAudio.playKnifeSwitchOpen();
+        } else {
+          labAudio.playKnifeSwitchClose();
+        }
+        if (this.onToggleSwitch) this.onToggleSwitch();
+        return true;
+      }
+    }
+
+    // 4. Check power rocker (within 8cm reach)
+    if (this.psSwitchMesh) {
+      const psSwitchPos = new THREE.Vector3();
+      this.psSwitchMesh.getWorldPosition(psSwitchPos);
+      if (psSwitchPos.distanceTo(pinchPos) < 0.08) {
+        labAudio.playPowerSwitch(!this.currentCircuitStatus?.isPowerOn);
+        if (this.onTogglePower) this.onTogglePower();
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public handleSpatialRayHover(origin: THREE.Vector3, direction: THREE.Vector3): { hitPoint: THREE.Vector3 | null; label?: string } {
+    const ray = new THREE.Raycaster(origin, direction);
+
+    // 1. Terminals hover
+    const termHits = ray.intersectObjects(this.terminalMeshes, false);
+    if (termHits.length > 0) {
+      const termId = (termHits[0].object as any).terminalId as TerminalId;
+      const halo = this.terminalHalos.get(termId);
+      if (halo) {
+        (halo.ring.material as THREE.MeshBasicMaterial).color.setHex(0xfbbf24);
+        halo.ring.scale.set(1.4, 1.4, 1.4);
+      }
+      return { hitPoint: termHits[0].point, label: `Terminal: ${termId}` };
+    }
+
+    // 2. Wire hover
+    const wireMeshes = this.wireManager.getWireMeshes();
+    if (wireMeshes.length > 0) {
+      const wireHits = ray.intersectObjects(wireMeshes, false);
+      if (wireHits.length > 0) {
+        return { hitPoint: wireHits[0].point, label: 'Wire (Pinch to unplug)' };
+      }
+    }
+
+    // 3. Knife switch hover
+    if (this.switchGroup) {
+      const switchHits = ray.intersectObjects(this.switchGroup.children, true);
+      if (switchHits.length > 0) {
+        return { hitPoint: switchHits[0].point, label: `Knife Switch (${this.isKnifeClosed ? 'Pinch to open' : 'Pinch to close'})` };
+      }
+    }
+
+    // 4. Power switch hover
+    if (this.psSwitchMesh) {
+      const psHits = ray.intersectObject(this.psSwitchMesh, false);
+      if (psHits.length > 0) {
+        return { hitPoint: psHits[0].point, label: 'DC Power Switch' };
+      }
+    }
+
+    return { hitPoint: null };
   }
 
   private setupDesktopEvents(canvas: HTMLCanvasElement) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CheckCircle2, AlertTriangle, Shield, Sliders, Eye, Hand, Monitor } from 'lucide-react';
+import { X, CheckCircle2, Shield, Sliders, Eye, Hand, Monitor } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -58,27 +58,42 @@ export const VisionProGuideModal: React.FC<Props> = ({ isOpen, onClose }) => {
             </ol>
           </div>
 
-          {/* Section 3: Dual-Input Spatial Architecture */}
+          {/* Section 3: Dual-Input Spatial Architecture & Wire Connection */}
           <div className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2">
             <h3 className="font-semibold text-cyan-300 flex items-center gap-2 text-base">
-              <Hand className="w-4 h-4 text-indigo-400" /> 3. Dual-Input Architecture & Graceful Fallback
+              <Hand className="w-4 h-4 text-indigo-400" /> 3. Operating Equipment & Connecting Wires in visionOS
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-              <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-800/40">
-                <div className="font-semibold text-emerald-300 flex items-center gap-1.5 mb-1">
-                  <CheckCircle2 className="w-4 h-4" /> Mode A: Direct Hand Tracking
+            <div className="space-y-2 text-xs">
+              <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1.5">
+                <div className="font-semibold text-white flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-cyan-400" /> Connecting Circuit Wires (Gaze &amp; Pinch):
                 </div>
                 <p className="text-slate-300">
-                  When 25-joint hand tracking is available, the laboratory visualizes real skeletal joints (cyan/indigo spheres) and detects index-finger-to-thumb pinches to grab and move apparatus directly in 3D space.
+                  1. Look directly at any banana post terminal on the apparatus (Power Supply, Switch, Resistor, Ammeter, or Voltmeter). A golden glowing halo will pulse around the terminal socket and the 3D reticle will lock onto it.<br />
+                  2. <strong>Pinch your index finger and thumb</strong> to select the terminal.<br />
+                  3. Look at the destination terminal on another apparatus and <strong>pinch again</strong>. The wire will instantly snap into place with realistic banana plugs and physics drape!
                 </p>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/40">
-                <div className="font-semibold text-amber-300 flex items-center gap-1.5 mb-1">
-                  <AlertTriangle className="w-4 h-4" /> Mode B: Gaze &amp; Pinch Fallback
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                  <div className="font-semibold text-white mb-1">Repositioning Apparatus:</div>
+                  <p className="text-slate-300">
+                    Pinch on the body/casing of any equipment (away from terminal sockets) and move your hand to slide it smoothly across the teak workbench.
+                  </p>
                 </div>
+                <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                  <div className="font-semibold text-white mb-1">Unplugging &amp; Switches:</div>
+                  <p className="text-slate-300">
+                    Pinch directly on any wire to unplug it. Pinch the knife switch blade to open/close it. Pinch the red power rocker to toggle DC power.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-cyan-950/40 border border-cyan-800/50">
+                <div className="font-semibold text-cyan-300 mb-1">Hand Visibility in visionOS:</div>
                 <p className="text-slate-300">
-                  If skeletal tracking is disabled in Safari, standard visionOS Gaze &amp; Pinch (transient pointer) handles interaction. Look at an object and pinch fingers together to grab and translate it smoothly across the workbench.
+                  The laboratory now renders a <strong>Holographic Spatial Hand &amp; Pinch Cursor</strong> at your hand position in standard Gaze &amp; Pinch mode. For full 25-joint skeletal hand meshes, enable <strong>WebXR Hand Input Mode</strong> in Safari Feature Flags (Section 2).
                 </p>
               </div>
             </div>

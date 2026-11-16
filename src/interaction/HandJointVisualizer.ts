@@ -162,8 +162,21 @@ export class HandJointVisualizer {
       const jointMesh = this.jointMeshes.get(jointName);
       if (!jointMesh) continue;
 
-      // Access joint from XRHand
-      const xrJoint = (hand as any).get ? (hand as any).get(jointName) : (hand as any)[jointName];
+      // Access joint from XRHand (robust across Safari visionOS and Chromium WebXR)
+      let xrJoint = null;
+      if (typeof (hand as any).get === 'function') {
+        xrJoint = (hand as any).get(jointName);
+        if (!xrJoint) {
+          const jointIdx = XR_HAND_JOINTS.indexOf(jointName);
+          if (jointIdx !== -1) {
+            xrJoint = (hand as any).get(jointIdx);
+          }
+        }
+      }
+      if (!xrJoint && (hand as any)[jointName]) {
+        xrJoint = (hand as any)[jointName];
+      }
+
       if (!xrJoint) {
         jointMesh.visible = false;
         continue;

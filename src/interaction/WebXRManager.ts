@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { XRHandModelFactory } from 'three/examples/jsm/webxr/XRHandModelFactory.js';
 import { HandJointVisualizer } from './HandJointVisualizer';
 import { TransientPointerVisualizer } from './TransientPointerVisualizer';
 import { InputAbstraction } from './InputAbstraction';
@@ -15,6 +16,13 @@ export class WebXRManager {
   // Hand visualizers
   private leftHandVisualizer: HandJointVisualizer;
   private rightHandVisualizer: HandJointVisualizer;
+
+  // Native Three.js Hand and Controller tracking
+  private hand0: THREE.XRHandSpace;
+  private hand1: THREE.XRHandSpace;
+  private controller0: THREE.XRTargetRaySpace;
+  private controller1: THREE.XRTargetRaySpace;
+  private handModelFactory: XRHandModelFactory;
 
   // Transient pointer visualizers (gaze & pinch fallback)
   private transientPointerVisualizers: TransientPointerVisualizer[] = [];
@@ -65,6 +73,28 @@ export class WebXRManager {
     this.scene.add(this.leftHandVisualizer.group);
     this.scene.add(this.rightHandVisualizer.group);
 
+    // Three.js native WebXR Hand Models (spheres profile works offline with 0 asset latency)
+    this.handModelFactory = new XRHandModelFactory();
+
+    this.hand0 = this.renderer.xr.getHand(0);
+    this.hand0.add(this.handModelFactory.createHandModel(this.hand0, 'spheres'));
+    this.scene.add(this.hand0);
+
+    this.hand1 = this.renderer.xr.getHand(1);
+    this.hand1.add(this.handModelFactory.createHandModel(this.hand1, 'spheres'));
+    this.scene.add(this.hand1);
+
+    // Native WebXR Controllers (for visionOS gaze & pinch rays)
+    this.controller0 = this.renderer.xr.getController(0);
+    this.controller0.addEventListener('selectstart', this.onControllerSelectStart);
+    this.controller0.addEventListener('selectend', this.onControllerSelectEnd);
+    this.scene.add(this.controller0);
+
+    this.controller1 = this.renderer.xr.getController(1);
+    this.controller1.addEventListener('selectstart', this.onControllerSelectStart);
+    this.controller1.addEventListener('selectend', this.onControllerSelectEnd);
+    this.scene.add(this.controller1);
+
     // Check device WebXR capabilities
     this.checkSupport();
   }
@@ -82,8 +112,12 @@ export class WebXRManager {
     }
 
     try {
-      const supported = await navigator.xr!.isSessionSupported('immersive-vr');
-      this.diagnostics.immersiveVrSupported = supported;
+      const vr = await navigator.xr!.isSessionSupported('immersive-vr');
+      let ar = false;
+      try {
+        ar = await navigator.xr!.isSessionSupported('immersive-ar');
+      } catch {}
+      this.diagnostics.immersiveVrSupported = vr || ar;
       this.diagnostics.checkingSupport = false;
       this.emitDiagnostics();
     } catch (err: any) {
@@ -109,10 +143,16 @@ export class WebXRManager {
           'local-floor',
           'bounded-floor',
           'layers',
+          'hit-test',
         ],
       };
 
-      const session = await navigator.xr.requestSession('immersive-vr', sessionInit);
+      let session: XRSession;
+      try {
+        session = await navigator.xr.requestSession('immersive-vr', sessionInit);
+      } catch {
+        session = await navigator.xr.requestSession('immersive-ar', sessionInit);
+      }
       this.xrSession = session;
       await this.renderer.xr.setSession(session);
 
@@ -142,6 +182,22 @@ export class WebXRManager {
       return false;
     }
   }
+
+  private onControllerSelectStart = (event: any) => {
+    const controller = event.target as THREE.Group;
+    const origin = new THREE.Vector3();
+    const dir = new THREE.Vector3(0, 0, -1);
+    controller.getWorldPosition(origin);
+    controller.getWorldDirection(dir);
+    dir.negate();
+
+    this.inputAbstraction.processPointerSelect(`controller_${controller.uuid}`, origin, dir, true);
+  };
+
+  private onControllerSelectEnd = (event: any) => {
+    const controller = event.target as THREE.Group;
+    this.inputAbstraction.processPointerSelect(`controller_${controller.uuid}`, new THREE.Vector3(), new THREE.Vector3(), false);
+  };
 
   public exitVR() {
     if (this.xrSession) {
@@ -365,6 +421,10 @@ export class WebXRManager {
     this.exitVR();
     this.leftHandVisualizer.dispose();
     this.rightHandVisualizer.dispose();
+    this.scene.remove(this.hand0);
+    this.scene.remove(this.hand1);
+    this.scene.remove(this.controller0);
+    this.scene.remove(this.controller1);
     this.transientPointerVisualizers.forEach((v) => v.dispose());
   }
 }
