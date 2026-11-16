@@ -129,7 +129,7 @@ export const ObservationDrawer: React.FC<Props> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-slate-900/95 hover:bg-slate-800 text-slate-200 border-t border-x border-slate-700/80 rounded-t-2xl shadow-2xl backdrop-blur-xl cursor-pointer transition font-sans gap-1.5 sm:gap-2"
+        className="w-full flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-950/85 hover:bg-slate-900 text-slate-200 border-t border-x border-white/10 rounded-t-2xl shadow-2xl backdrop-blur-2xl cursor-pointer transition font-sans gap-2"
       >
         <div className="flex items-center gap-1.5 sm:gap-2 truncate">
           <Table className="w-4 h-4 text-cyan-400 shrink-0" />

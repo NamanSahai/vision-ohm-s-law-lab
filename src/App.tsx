@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { LaboratoryCanvas } from './components/LaboratoryCanvas';
 import { Header } from './ui/Header';
-import { DiagnosticsOverlay } from './ui/DiagnosticsOverlay';
 import { VisionProGuideModal } from './ui/VisionProGuideModal';
 import { ApparatusInspectorModal } from './ui/ApparatusInspectorModal';
 import { QuickHelpModal } from './ui/QuickHelpModal';
@@ -387,12 +386,6 @@ export function App() {
         onAddReading={handleAddReading}
         onDeleteReading={handleDeleteReading}
         onClearReadings={handleClearReadings}
-      />
-
-      {/* Spatial Diagnostics Overlay (Bottom Left) */}
-      <DiagnosticsOverlay
-        diagnostics={diagnostics}
-        onOpenGuide={() => setGuideOpen(true)}
       />
 
       {/* Apple Vision Pro Safari Setup Modal */}
