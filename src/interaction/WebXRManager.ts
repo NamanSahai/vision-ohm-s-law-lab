@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { HandJointVisualizer } from './HandJointVisualizer';
 import { TransientPointerVisualizer } from './TransientPointerVisualizer';
 import { InputAbstraction } from './InputAbstraction';
+import { labAudio } from '../audio/LabSoundSynthesizer';
 import type { WebXRDiagnostics, HandStatus } from '../types/interaction';
 
 export class WebXRManager {
@@ -78,15 +79,11 @@ export class WebXRManager {
     this.hand1 = this.renderer.xr.getHand(1);
     this.scene.add(this.hand1);
 
-    // Native WebXR Controllers (for visionOS gaze & pinch rays)
+    // Native WebXR Controllers (for target ray spaces)
     this.controller0 = this.renderer.xr.getController(0);
-    this.controller0.addEventListener('selectstart', this.onControllerSelectStart);
-    this.controller0.addEventListener('selectend', this.onControllerSelectEnd);
     this.scene.add(this.controller0);
 
     this.controller1 = this.renderer.xr.getController(1);
-    this.controller1.addEventListener('selectstart', this.onControllerSelectStart);
-    this.controller1.addEventListener('selectend', this.onControllerSelectEnd);
     this.scene.add(this.controller1);
 
     // Check device WebXR capabilities
@@ -130,6 +127,9 @@ export class WebXRManager {
     }
 
     try {
+      // Prime and unlock Web Audio immediately on enterVR user gesture
+      await labAudio.unlockAudio();
+
       // Request session with hand tracking and reference space options
       const sessionInit: XRSessionInit = {
         optionalFeatures: [
@@ -177,22 +177,6 @@ export class WebXRManager {
     }
   }
 
-  private onControllerSelectStart = (event: any) => {
-    const controller = event.target as THREE.Group;
-    const origin = new THREE.Vector3();
-    const dir = new THREE.Vector3(0, 0, -1);
-    controller.getWorldPosition(origin);
-    controller.getWorldDirection(dir);
-    dir.negate();
-
-    this.inputAbstraction.processPointerSelect(`controller_${controller.uuid}`, origin, dir, true);
-  };
-
-  private onControllerSelectEnd = (event: any) => {
-    const controller = event.target as THREE.Group;
-    this.inputAbstraction.processPointerSelect(`controller_${controller.uuid}`, new THREE.Vector3(), new THREE.Vector3(), false);
-  };
-
   public exitVR() {
     if (this.xrSession) {
       this.xrSession.end();
@@ -212,11 +196,24 @@ export class WebXRManager {
   };
 
   private onInputSourcesChange = (event: XRInputSourcesChangeEvent) => {
+    // When transient pointers or controllers are removed, immediately clean up their visualizers
+    for (const removed of event.removed) {
+      const data = this.activePointerInputs.get(removed);
+      if (data) {
+        data.visualizer.hide();
+        this.transientPointerVisualizers.push(data.visualizer);
+        this.activePointerInputs.delete(removed);
+        this.inputAbstraction.processPointerSelect(data.id, new THREE.Vector3(), new THREE.Vector3(), false);
+      }
+    }
     this.diagnostics.inputSourceCount = event.session.inputSources.length;
     this.emitDiagnostics();
   };
 
   private onSelectStart = (event: XRInputSourceEvent) => {
+    // Prime and unlock Web Audio on every XR user gesture
+    labAudio.unlockAudio();
+
     const inputSource = event.inputSource;
     const refSpace = this.xrRefSpace;
     if (!refSpace || !event.frame) return;
@@ -247,6 +244,8 @@ export class WebXRManager {
     const pointerData = this.activePointerInputs.get(inputSource);
     if (pointerData) {
       pointerData.isPinching = false;
+      // Immediately hide reticle visualizer upon pinch release so it NEVER stays stuck in space
+      pointerData.visualizer.hide();
       const refSpace = this.xrRefSpace;
       if (refSpace && event.frame) {
         const targetRayPose = event.frame.getPose(inputSource.targetRaySpace, refSpace);
@@ -304,8 +303,21 @@ export class WebXRManager {
     const inputSources = this.xrSession.inputSources;
     this.diagnostics.inputSourceCount = inputSources.length;
 
+    // Prune stale transient pointers whose XRInputSource is no longer present
+    const currentSources = new Set(inputSources);
+    for (const [source, data] of this.activePointerInputs.entries()) {
+      if (!currentSources.has(source)) {
+        data.visualizer.hide();
+        this.transientPointerVisualizers.push(data.visualizer);
+        this.activePointerInputs.delete(source);
+        this.inputAbstraction.processPointerSelect(data.id, new THREE.Vector3(), new THREE.Vector3(), false);
+      }
+    }
+
     let hasHandTracking = false;
     let transientPointerCount = 0;
+    let leftHandSeen = false;
+    let rightHandSeen = false;
 
     let leftStatus: HandStatus = {
       handedness: 'left',
@@ -326,41 +338,61 @@ export class WebXRManager {
     for (let i = 0; i < inputSources.length; i++) {
       const inputSource = inputSources[i];
 
-      // CASE 1: Real WebXR Hand Tracking (Joints available)
+      // CASE 1: Real WebXR Hand Tracking (Articulated hand joints available)
       if (inputSource.hand) {
         hasHandTracking = true;
-        const handedness = inputSource.handedness === 'left' ? 'left' : 'right';
-        const visualizer = handedness === 'left' ? this.leftHandVisualizer : this.rightHandVisualizer;
 
-        visualizer.setVisible(true);
-        const result = visualizer.updateJoints(frame, this.xrRefSpace, inputSource.hand);
+        // Robust handedness determination across visionOS and Quest runtimes
+        let handedness = inputSource.handedness;
+        if (handedness !== 'left' && handedness !== 'right') {
+          handedness = i === 0 ? 'left' : 'right';
+        }
 
-        const handStat: HandStatus = {
-          handedness,
-          detected: result.detected,
-          jointCount: result.validJoints,
-          pinchDistance: result.pinchDistance ? Math.round(result.pinchDistance * 1000) : null,
-          isPinching: result.isPinching,
-          indexTipPosition: result.indexTip,
-          thumbTipPosition: result.thumbTip,
-          wristPosition: result.wrist,
-        };
+        if (handedness === 'left') {
+          leftHandSeen = true;
+          this.leftHandVisualizer.setVisible(true);
+          const result = this.leftHandVisualizer.updateJoints(frame, this.xrRefSpace, inputSource.hand);
 
-        if (handedness === 'left') leftStatus = handStat;
-        else rightStatus = handStat;
+          leftStatus = {
+            handedness: 'left',
+            detected: result.detected,
+            jointCount: result.validJoints,
+            pinchDistance: result.pinchDistance ? Math.round(result.pinchDistance * 1000) : null,
+            isPinching: result.isPinching,
+            indexTipPosition: result.indexTip,
+            thumbTipPosition: result.thumbTip,
+            wristPosition: result.wrist,
+          };
 
-        // Feed hand pinch into input abstraction
-        const pinchPos = result.indexTip && result.thumbTip
-          ? result.indexTip.clone().add(result.thumbTip).multiplyScalar(0.5)
-          : null;
+          const pinchPos = result.indexTip && result.thumbTip
+            ? result.indexTip.clone().add(result.thumbTip).multiplyScalar(0.5)
+            : null;
 
-        this.inputAbstraction.processHandPinch(
-          handedness === 'left' ? 'left-hand' : 'right-hand',
-          pinchPos,
-          result.isPinching
-        );
+          this.inputAbstraction.processHandPinch('left-hand', pinchPos, result.isPinching);
+        } else {
+          rightHandSeen = true;
+          this.rightHandVisualizer.setVisible(true);
+          const result = this.rightHandVisualizer.updateJoints(frame, this.xrRefSpace, inputSource.hand);
+
+          rightStatus = {
+            handedness: 'right',
+            detected: result.detected,
+            jointCount: result.validJoints,
+            pinchDistance: result.pinchDistance ? Math.round(result.pinchDistance * 1000) : null,
+            isPinching: result.isPinching,
+            indexTipPosition: result.indexTip,
+            thumbTipPosition: result.thumbTip,
+            wristPosition: result.wrist,
+          };
+
+          const pinchPos = result.indexTip && result.thumbTip
+            ? result.indexTip.clone().add(result.thumbTip).multiplyScalar(0.5)
+            : null;
+
+          this.inputAbstraction.processHandPinch('right-hand', pinchPos, result.isPinching);
+        }
       }
-      // CASE 2: Transient Pointer / Gaze & Pinch Fallback (visionOS Safari standard input)
+      // CASE 2: Transient Pointer / Gaze & Pinch Fallback (Only active when hands are not directly tracked)
       else if (inputSource.targetRaySpace) {
         transientPointerCount++;
         const pointerData = this.getOrCreatePointerData(inputSource);
@@ -384,6 +416,17 @@ export class WebXRManager {
         } else {
           pointerData.visualizer.hide();
         }
+      }
+    }
+
+    // Hide visualizers for hands that are currently lost/untracked
+    if (!leftHandSeen) this.leftHandVisualizer.setVisible(false);
+    if (!rightHandSeen) this.rightHandVisualizer.setVisible(false);
+
+    // When real hands are actively tracked, suppress gaze reticles to prevent visual clutter
+    if (hasHandTracking) {
+      for (const data of this.activePointerInputs.values()) {
+        data.visualizer.hide();
       }
     }
 

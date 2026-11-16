@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { InteractableObject3D } from '../types/interaction';
+import { labAudio } from '../audio/LabSoundSynthesizer';
 
 export interface DragState {
   object: InteractableObject3D;
@@ -235,6 +236,7 @@ export class InputAbstraction {
   private startDrag(grabberId: string, obj: InteractableObject3D, grabPoint: THREE.Vector3) {
     obj.isGrabbed = true;
     obj.grabberId = grabberId;
+    labAudio.playApparatusGrab();
 
     const currentPos = obj.position.clone();
     const offset = currentPos.clone().sub(grabPoint);
@@ -299,6 +301,7 @@ export class InputAbstraction {
 
     drag.object.isGrabbed = false;
     drag.object.grabberId = null;
+    labAudio.playApparatusRelease();
 
     if (drag.object.onGrabEnd) {
       drag.object.onGrabEnd();

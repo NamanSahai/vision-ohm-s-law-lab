@@ -256,6 +256,7 @@ export function App() {
   };
 
   const handleEnterVR = () => {
+    labAudio.unlockAudio();
     if (manager) {
       manager.enterVR();
     }
